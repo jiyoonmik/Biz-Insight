@@ -40,4 +40,4 @@ src/django/mysite/static/wordcloud_images/
 data/vectorstore/
 
 # Internal development notes not intended for public README/repo docs
-archive/internal/
+archive/
