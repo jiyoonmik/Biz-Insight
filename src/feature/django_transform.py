@@ -34,30 +34,16 @@ def django_transform(fs):
     cf = fs["cf"]
     ###############################################################################
     # initialization
-    user = "root"
-    password = "****"
-    host = "localhost"
-    database = "Data_Mart"
+    import os
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    DATA_DIR = os.path.join(BASE_DIR, "data")
 
-    engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}/{database}")
-
-    query = "SELECT * FROM Data_Mart.industry_average_year;"
-    industry_average = pd.read_sql(query, engine)
-
-    query = "SELECT * FROM Data_Lake.crb_index;"
-    crb_index = pd.read_sql(query, engine)
-
-    query = "SELECT * FROM Data_Warehouse.economic_indicators;"
-    economic_indicators = pd.read_sql(query, engine)
-
-    query = "SELECT * FROM Data_Mart.credit_model_a;"
-    model_a = pd.read_sql(query, engine)
-
-    query = "SELECT * FROM Data_Mart.sector_revenue_top_features;"
-    sector_revenue_top_features = pd.read_sql(query, engine)
-
-    query = "SELECT * FROM Data_Mart.sector_revenue_aggregation;"
-    sector_revenue_aggregation = pd.read_sql(query, engine)
+    industry_average = pd.read_csv(os.path.join(DATA_DIR, "industry_average_year.csv"))
+    crb_index = pd.read_csv(os.path.join(DATA_DIR, "crb_index.csv"))
+    economic_indicators = pd.read_csv(os.path.join(DATA_DIR, "economic_indicators.csv"))
+    model_a = pd.read_csv(os.path.join(DATA_DIR, "credit_model_a.csv"))
+    sector_revenue_top_features = pd.read_csv(os.path.join(DATA_DIR, "sector_revenue_top_features.csv"))
+    sector_revenue_aggregation = pd.read_csv(os.path.join(DATA_DIR, "sector_revenue_aggregation.csv"))
 
     ###############################################################################
 

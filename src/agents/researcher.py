@@ -1,0 +1,108 @@
+import time
+from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
+from src.config import get_llm, rate_limited, INTER_AGENT_DELAY_SEC
+from src.tools.langchain_tools import RESEARCHER_TOOLS
+
+
+def _message_content_to_text(content) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                parts.append(str(item.get("text") or item.get("content") or item))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts)
+    return str(content)
+
+
+@rate_limited
+def researcher_node(state: dict) -> dict:
+    """
+    Researcher 에이전트: 도구를 사용해 기업 데이터를 수집합니다.
+    """
+    llm = get_llm()
+    
+    company = state["company"]
+    query_type = state["query_type"]
+    user_request = state.get("user_request") or query_type
+    requested_domains = state.get("requested_domains", [])
+    allowed_tool_names = state.get("allowed_research_tools", [])
+    available_tools = [
+        tool for tool in RESEARCHER_TOOLS
+        if not allowed_tool_names or tool.name in allowed_tool_names
+    ]
+    llm_with_tools = llm.bind_tools(available_tools)
+
+    messages = state.get("researcher_messages", [])
+    recursion_count = state.get("recursion_count", 0)
+    max_recursions = state.get("max_recursions", 5)
+    
+    # 시스템 프롬프트 설정 (최초 실행 시)
+    if not any(isinstance(m, SystemMessage) for m in messages):
+        sys_msg = SystemMessage(
+            content=f"당신은 '{company}' 기업에 대한 데이터를 수집하는 전문 리서처입니다. "
+                    f"사용자의 자연어 요청은 '{user_request}'입니다. "
+                    f"추론된 분석 도메인은 {requested_domains}입니다. "
+                    f"반드시 허용된 도구({allowed_tool_names}) 안에서만 필요한 데이터를 수집하세요. "
+                    "요청과 관련 없는 도구는 호출하지 마세요. "
+                    "모든 필요한 데이터를 충분히 수집했다고 판단되면, 최종 수집 결과를 요약해서 답변하세요."
+        )
+        request_msg = HumanMessage(content=f"분석 대상 기업: {company}\n분석 요청: {user_request}")
+        messages = [sys_msg, request_msg] + messages
+    
+    # ── 호출 횟수(Recursion) 제어 ──
+    if recursion_count >= max_recursions:
+        return {
+            "analyses": [{"agent": "researcher", "content": "⚠️ 최대 탐색 횟수를 초과하여 조기 종료되었습니다. 수집된 데이터까지만 전달합니다."}],
+            "recursion_count": 0,
+            "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",
+        }
+        
+    # 모델 호출
+    response = llm_with_tools.invoke(messages)
+    
+    # 도구 호출이 있는 경우
+    if response.tool_calls:
+        new_messages = messages + [response]
+        for tool_call in response.tool_calls:
+            # 도구 이름에 맞는 함수 찾기
+            tool_func = next((t for t in available_tools if t.name == tool_call["name"]), None)
+            if tool_func:
+                try:
+                    tool_result = tool_func.invoke(tool_call["args"])
+                except Exception as e:
+                    tool_result = f"Error: {str(e)}"
+                
+                tool_msg = ToolMessage(
+                    content=str(tool_result),
+                    tool_call_id=tool_call["id"],
+                    name=tool_call["name"]
+                )
+                new_messages.append(tool_msg)
+            else:
+                new_messages.append(ToolMessage(
+                    content=f"Error: Tool {tool_call['name']} not found.",
+                    tool_call_id=tool_call["id"],
+                    name=tool_call["name"]
+                ))
+        
+        # 도구 실행 후 다시 모델을 호출하기 위해 recursion 증가 후 현재 노드 반환
+        return {
+            "researcher_messages": new_messages[len(messages):],
+            "recursion_count": recursion_count + 1,
+            "next_agent": "researcher" # 스스로를 다시 호출 (ReAct Loop)
+        }
+    else:
+        # 도구 호출이 끝나고 최종 요약을 내놓은 경우
+        content = _message_content_to_text(response.content)
+        time.sleep(INTER_AGENT_DELAY_SEC)
+        return {
+            "researcher_messages": [response],
+            "analyses": [{"agent": "researcher", "content": content}],
+            "recursion_count": 0, # 다음 에이전트를 위해 초기화
+            "max_recursions": 3,
+            "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",
+        }

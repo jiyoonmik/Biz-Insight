@@ -1,0 +1,61 @@
+[project]
+name = "biz-insight"
+version = "0.1.0"
+description = "Streamlit and LangGraph based corporate analysis service for Korean company data."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "django==6.0.4",
+    "focal-loss==0.0.7",
+    "google-genai==1.74.0",
+    "groq==0.37.1",
+    "joblib==1.5.3",
+    "keras==3.14.0",
+    "langchain==1.2.17",
+    "langchain-community==0.4.1",
+    "langchain-experimental==0.4.1",
+    "langchain-google-genai==4.2.2",
+    "langchain-groq==1.1.2",
+    "langchain-openai==1.2.1",
+    "langgraph==1.1.10",
+    "matplotlib==3.10.9",
+    "numpy==2.4.4",
+    "openai==2.33.0",
+    "openpyxl==3.1.5",
+    "pandas==3.0.2",
+    "pymysql==1.1.3",
+    "python-dotenv==1.2.2",
+    "requests==2.33.1",
+    "scikit-learn==1.8.0",
+    "scipy==1.17.1",
+    "seaborn==0.13.2",
+    "sentencepiece==0.2.1",
+    "sqlalchemy==2.0.49",
+    "streamlit==1.57.0",
+    "tensorflow==2.21.0",
+    "tokenizers==0.23.1",
+    "tqdm==4.67.3",
+    "wordcloud==1.9.6",
+]
+
+[project.optional-dependencies]
+data-api = [
+    "beautifulsoup4",
+    "dart-fss",
+    "ecos-api",
+    "fake-useragent",
+    "finance-datareader",
+    "pykrx",
+    "selenium",
+    "webdriver-manager",
+]
+rag = [
+    "chromadb",
+    "langchain-chroma",
+    "sentence-transformers",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
