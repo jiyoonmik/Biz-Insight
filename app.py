@@ -13,8 +13,16 @@ DEMO_THESIS = (
 )
 
 
+def _default_data_dir() -> str:
+    project_dir = os.path.dirname(__file__)
+    demo_dir = os.path.join(project_dir, "data", "demo")
+    if os.path.isdir(demo_dir):
+        return demo_dir
+    return os.path.join(project_dir, "data")
+
+
 def _configured_data_dir() -> str:
-    return os.path.abspath(os.getenv("BIZINSIGHT_DATA_DIR", os.path.join(os.path.dirname(__file__), "data")))
+    return os.path.abspath(os.getenv("BIZINSIGHT_DATA_DIR", _default_data_dir()))
 
 
 def _secret_value(name: str) -> str | None:
@@ -26,12 +34,21 @@ def _secret_value(name: str) -> str | None:
 
 def configure_from_secrets() -> None:
     data_dir = _secret_value("BIZINSIGHT_DATA_DIR")
-    if data_dir and not os.getenv("BIZINSIGHT_DATA_DIR"):
-        os.environ["BIZINSIGHT_DATA_DIR"] = str(data_dir)
+    if not os.getenv("BIZINSIGHT_DATA_DIR"):
+        os.environ["BIZINSIGHT_DATA_DIR"] = str(data_dir or _default_data_dir())
+
+    for name in ("GOOGLE_API_KEY", "DART_API_KEY", "LANGSMITH_API_KEY", "LANGCHAIN_API_KEY"):
+        value = _secret_value(name)
+        if value and not os.getenv(name):
+            os.environ[name] = str(value)
 
 
 def require_password() -> None:
-    expected = os.getenv("BIZINSIGHT_APP_PASSWORD") or _secret_value("APP_PASSWORD")
+    expected = (
+        os.getenv("BIZINSIGHT_APP_PASSWORD")
+        or _secret_value("BIZINSIGHT_APP_PASSWORD")
+        or _secret_value("APP_PASSWORD")
+    )
     if not expected:
         return
     if st.session_state.get("authenticated"):
