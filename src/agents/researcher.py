@@ -1,6 +1,7 @@
 import time
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from src.config import get_llm, rate_limited, INTER_AGENT_DELAY_SEC
+from src.agents.tool_result_compactor import compact_tool_result, summarize_tool_messages
 from src.tools.langchain_tools import RESEARCHER_TOOLS
 
 
@@ -47,6 +48,9 @@ def researcher_node(state: dict) -> dict:
                     f"사용자의 자연어 요청은 '{user_request}'입니다. "
                     f"추론된 분석 도메인은 {requested_domains}입니다. "
                     f"반드시 허용된 도구({allowed_tool_names}) 안에서만 필요한 데이터를 수집하세요. "
+                    "기업명만으로 분석하지 말고 먼저 alias 검색 도구로 stock_code를 확정한 뒤, "
+                    "KG knowledge context와 dynamic signal 도구를 우선 사용하세요. "
+                    "CSV 조회 도구는 KG/API 계층에서 찾지 못한 경우의 fallback으로만 사용하세요. "
                     "요청과 관련 없는 도구는 호출하지 마세요. "
                     "모든 필요한 데이터를 충분히 수집했다고 판단되면, 최종 수집 결과를 요약해서 답변하세요."
         )
@@ -55,9 +59,17 @@ def researcher_node(state: dict) -> dict:
     
     # ── 호출 횟수(Recursion) 제어 ──
     if recursion_count >= max_recursions:
+        summary = summarize_tool_messages(messages)
         return {
-            "analyses": [{"agent": "researcher", "content": "⚠️ 최대 탐색 횟수를 초과하여 조기 종료되었습니다. 수집된 데이터까지만 전달합니다."}],
+            "analyses": [{
+                "agent": "researcher",
+                "content": "⚠️ 최대 탐색 횟수에 도달하여 tool 사용을 종료합니다.\n\n"
+                           "아래는 지금까지 성공적으로 수집한 데이터의 압축 요약입니다.\n\n"
+                           f"{summary}",
+            }],
+            "errors": [f"researcher_react_limit_reached: {recursion_count}/{max_recursions}"],
             "recursion_count": 0,
+            "max_recursions": 3,
             "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",
         }
         
@@ -75,9 +87,10 @@ def researcher_node(state: dict) -> dict:
                     tool_result = tool_func.invoke(tool_call["args"])
                 except Exception as e:
                     tool_result = f"Error: {str(e)}"
+                compact_result = compact_tool_result(tool_call["name"], tool_result)
                 
                 tool_msg = ToolMessage(
-                    content=str(tool_result),
+                    content=str(compact_result),
                     tool_call_id=tool_call["id"],
                     name=tool_call["name"]
                 )
@@ -98,10 +111,17 @@ def researcher_node(state: dict) -> dict:
     else:
         # 도구 호출이 끝나고 최종 요약을 내놓은 경우
         content = _message_content_to_text(response.content)
+        finish_reason = response.response_metadata.get("finish_reason") if response.response_metadata else None
+        if not content.strip():
+            content = "⚠️ Researcher LLM이 빈 응답을 반환했습니다.\n\n" + summarize_tool_messages(messages)
+            errors = [f"researcher_empty_response: finish_reason={finish_reason}"]
+        else:
+            errors = []
         time.sleep(INTER_AGENT_DELAY_SEC)
         return {
             "researcher_messages": [response],
             "analyses": [{"agent": "researcher", "content": content}],
+            "errors": errors,
             "recursion_count": 0, # 다음 에이전트를 위해 초기화
             "max_recursions": 3,
             "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",

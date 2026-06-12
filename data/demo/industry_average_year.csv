@@ -1,0 +1,9 @@
+sector,period,revenue_growth,operating_margin,debt_ratio,source_file
+전기전자,2025,0.11,13.07,33.61,demo_public_snapshot_2026_06_13
+운수장비,2026-Q1,0.034,5.47,,news_snapshot_2026_q1_results
+서비스업,2024,,5.84,84.86,demo_public_snapshot_2026_06_13
+인터넷 인프라,2026,,,,user_provided_demo_universe_2026_06_13
+화장품 ODM,2026,,,,user_provided_demo_universe_2026_06_13
+헬스케어 장비,2026,,,,user_provided_demo_universe_2026_06_13
+OLED 소재,2026,,,,user_provided_demo_universe_2026_06_13
+위성통신 장비,2026,,,,user_provided_demo_universe_2026_06_13

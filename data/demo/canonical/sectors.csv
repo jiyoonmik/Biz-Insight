@@ -1,0 +1,9 @@
+sector_code,sector_name,source_name,source_file
+sector_electronics,전기전자,전기전자,demo_public_snapshot_2026_06_13
+sector_auto,운수장비,운수장비,demo_public_snapshot_2026_06_13
+sector_platform,서비스업,서비스업,demo_public_snapshot_2026_06_13
+sector_internet_infra,인터넷 인프라,인터넷 인프라,demo_public_snapshot_2026_06_13
+sector_beauty_odm,화장품 ODM,화장품 ODM,demo_public_snapshot_2026_06_13
+sector_healthcare_equipment,헬스케어 장비,헬스케어 장비,demo_public_snapshot_2026_06_13
+sector_oled_materials,OLED 소재,OLED 소재,demo_public_snapshot_2026_06_13
+sector_satellite_comm,위성통신 장비,위성통신 장비,demo_public_snapshot_2026_06_13

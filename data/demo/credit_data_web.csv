@@ -1,0 +1,9 @@
+corp,stock_code,period,debt_ratio,operating_margin,net_margin,comment,source_file
+삼성전자,005930,2025,33.61,13.07,13.27,대규모 자본 완충력과 반도체 사이클 회복이 핵심입니다.,demo_public_snapshot_2026_06_13
+현대자동차,005380,2026-Q1,,5.47,5.63,관세와 원가 부담이 단기 수익성 리스크입니다.,news_snapshot_2026_q1_results
+카카오,035720,2024,84.86,5.84,-2.06,수익성 회복과 규제 리스크 관리가 핵심입니다.,demo_public_snapshot_2026_06_13
+케이아이엔엑스,093320,2026,,,,데이터센터·IX·CDN·클라우드 수요와 설비투자 부담을 함께 봐야 합니다.,user_provided_demo_universe_2026_06_13
+씨앤씨인터내셔널,352480,2026,,,,K-뷰티 ODM 성장성과 고객사·트렌드 변동성을 함께 봐야 합니다.,user_provided_demo_universe_2026_06_13
+제이브이엠,054950,2026,,,,약국·병원 자동화 수요와 해외 확장 속도를 함께 봐야 합니다.,user_provided_demo_universe_2026_06_13
+덕산네오룩스,213420,2026,,,,OLED 소재 제품 믹스와 전방 고객사 사이클을 함께 봐야 합니다.,user_provided_demo_universe_2026_06_13
+인텔리안테크,189300,2026,,,,위성통신 수주와 저궤도 위성망 투자 사이클을 함께 봐야 합니다.,user_provided_demo_universe_2026_06_13

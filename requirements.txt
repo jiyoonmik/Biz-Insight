@@ -1,0 +1,13 @@
+streamlit==1.57.0
+pandas==3.0.2
+pyarrow==22.0.0
+python-dotenv==1.2.2
+langchain==1.2.17
+langchain-core==1.2.5
+langchain-community==0.4.1
+langchain-google-genai==4.2.2
+langgraph==1.1.10
+google-genai==1.74.0
+fastapi==0.124.4
+requests==2.33.1
+rdflib==7.5.0

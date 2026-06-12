@@ -27,8 +27,22 @@ def reviewer_node(state: dict) -> dict:
             break
             
     if not analyst_content:
-        # Analyst 결과가 없으면 바로 넘김
-        return {"next_agent": "synthesis"}
+        feedback = "Analyst 산출물이 비어 있어 최종 리포트 품질 검증을 수행할 수 없습니다."
+        if revision_count < max_revisions:
+            return {
+                "feedback": feedback,
+                "revision_count": revision_count + 1,
+                "recursion_count": 0,
+                "max_recursions": 1,
+                "next_agent": "analyst",
+                "errors": ["reviewer_empty_analyst_output"],
+                "analyses": [{"agent": "reviewer", "content": f"🔄 검토 피드백: {feedback}"}],
+            }
+        return {
+            "next_agent": "synthesis",
+            "errors": ["reviewer_empty_analyst_output"],
+            "analyses": [{"agent": "reviewer", "content": f"⚠️ 추가 보완 필요: {feedback}"}],
+        }
         
     prompt = f"""당신은 기업 분석 리포트의 품질을 검증하는 수석 검토자(Reviewer)입니다.
 대상 기업: '{company}'
@@ -40,7 +54,13 @@ def reviewer_node(state: dict) -> dict:
 {analyst_content}
 ---
 
-이 분석이 투자자에게 제공될 수 있을 만큼 객관적이고 논리적이며, 중요한 누락(예: 재무 데이터 부족, 위험 요인 언급 부재 등)이 없는지 검토하세요.
+이 분석이 투자자에게 제공될 수 있을 만큼 객관적이고 논리적인지 검토하세요.
+특히 아래 품질 기준을 반드시 확인하세요.
+- 기업명만으로 단정하지 않고 stock_code가 확정되어 있는가
+- 정적 KG/재무제표의 기준 회계연도와 주가/리뷰/거시지표 같은 동적 데이터 기준일을 구분했는가
+- 평가기준별 근거(수익성, 유동성, 재무부담, 현금창출력, 계속기업 등)가 수치와 기간을 포함하는가
+- 신용등급, 산업평균, 위험 신호가 근거 없이 주장되지 않았는가
+- 주가/직원 리뷰 원문을 재무제표 사실처럼 혼동하지 않았는가
 
 검토 결과는 반드시 아래 JSON 형식으로만 응답하세요:
 {{
@@ -65,9 +85,8 @@ def reviewer_node(state: dict) -> dict:
         status = result.get("status", "PASS")
         feedback = result.get("feedback", "")
     except Exception:
-        # 파싱 실패 시 기본적으로 통과시킴
-        status = "PASS"
-        feedback = ""
+        status = "REVISE"
+        feedback = "Reviewer 응답 JSON 파싱에 실패했습니다. 분석 본문과 근거를 더 명확히 구조화해야 합니다."
         
     if status == "REVISE" and feedback and revision_count < max_revisions:
         return {

@@ -23,7 +23,7 @@ POST_LLM_CALL_DELAY_SEC = 1.5
 
 # ── 데이터 경로 ───────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.path.abspath(os.getenv("BIZINSIGHT_DATA_DIR", os.path.join(BASE_DIR, "data")))
 
 # ── CSV 파일 매핑 ─────────────────────────────────────────
 CSV_FILES = {

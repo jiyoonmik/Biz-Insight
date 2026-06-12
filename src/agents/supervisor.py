@@ -9,13 +9,20 @@ from src.config import rate_limited
 
 
 DOMAIN_TOOL_MAP = {
-    "overview": ["tool_get_company_info"],
+    "overview": ["tool_search_company_by_name", "tool_get_company_knowledge_context", "tool_get_company_info"],
     "financial": [
+        "tool_search_company_by_name",
+        "tool_get_company_knowledge_context",
+        "tool_get_criteria_evidence",
         "tool_get_company_info",
         "tool_get_financial_data",
         "tool_get_industry_average",
     ],
     "credit": [
+        "tool_search_company_by_name",
+        "tool_get_company_knowledge_context",
+        "tool_get_credit_rating_history",
+        "tool_get_criteria_evidence",
         "tool_get_company_info",
         "tool_get_financial_data",
         "tool_get_credit_data",
@@ -23,16 +30,31 @@ DOMAIN_TOOL_MAP = {
         "tool_get_industry_average",
     ],
     "investment": [
+        "tool_search_company_by_name",
+        "tool_get_company_knowledge_context",
+        "tool_get_stock_summary",
         "tool_get_company_info",
         "tool_get_financial_data",
         "tool_get_investment_data",
         "tool_get_stock_data",
     ],
     "review": [
+        "tool_search_company_by_name",
+        "tool_get_company_knowledge_context",
+        "tool_get_review_summary",
+        "tool_search_review_evidence",
         "tool_get_company_info",
         "tool_get_employee_reviews",
     ],
     "risk": [
+        "tool_search_company_by_name",
+        "tool_get_company_knowledge_context",
+        "tool_get_criteria_evidence",
+        "tool_get_credit_rating_history",
+        "tool_get_stock_summary",
+        "tool_get_review_summary",
+        "tool_search_review_evidence",
+        "tool_get_macro_context",
         "tool_get_company_info",
         "tool_get_financial_data",
         "tool_get_credit_data",

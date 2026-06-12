@@ -1,0 +1,6 @@
+risk_signal_code,criterion_code,description,source_rule,severity
+high_leverage,leverage,"Debt burden is elevated relative to equity, income, or assets.",debt_ratio > 200,high
+negative_operating_cash_flow,cash_generation,Operating cash flow is negative.,operating_cash_flow < 0,high
+low_employee_rating,internal_control,Employee rating is weak and may indicate organization risk.,rating < 2.5,medium
+declining_profitability,profitability,Profitability metrics declined year over year.,operating_income < 0,medium
+weak_liquidity,liquidity,Liquidity ratios or working capital are weak.,current_ratio < 100,high

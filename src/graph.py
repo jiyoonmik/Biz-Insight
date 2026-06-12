@@ -5,6 +5,8 @@ Biz-Insight LangGraph 메인 그래프 (Multi-Agent Architecture)
 - Reviewer <-> Analyst 간의 피드백 기반 Self-Correction 루프 포함
 """
 from langgraph.graph import StateGraph, START, END
+import ast
+from typing import Any
 
 from src.state import BizInsightState
 
@@ -66,6 +68,142 @@ def build_graph():
 biz_insight_graph = build_graph()
 
 
+def _build_invoke_config(company_name: str, query_type: str, user_request: str) -> dict:
+    """Build LangGraph runtime config, including LangSmith trace metadata."""
+    return {
+        "recursion_limit": 30,
+        "run_name": "biz-insight-report",
+        "tags": [
+            "biz-insight",
+            "streamlit",
+            f"query_type:{query_type}",
+        ],
+        "metadata": {
+            "company": company_name,
+            "query_type": query_type,
+            "user_request": user_request,
+        },
+    }
+
+
+def _parse_tool_content(content: Any) -> Any:
+    if not isinstance(content, str):
+        return content
+    try:
+        return ast.literal_eval(content)
+    except Exception:
+        return content
+
+
+def _collect_sources(value: Any) -> set[str]:
+    sources: set[str] = set()
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if key in {"source", "source_file"} and item:
+                if isinstance(item, str):
+                    sources.update(part.strip() for part in item.split(";") if part.strip())
+                else:
+                    sources.add(str(item))
+            else:
+                sources.update(_collect_sources(item))
+    elif isinstance(value, list):
+        for item in value:
+            sources.update(_collect_sources(item))
+    return sources
+
+
+def _tool_messages(messages: list[Any]) -> list[dict[str, Any]]:
+    calls = []
+    for message in messages or []:
+        name = getattr(message, "name", None)
+        if not name or getattr(message, "type", None) != "tool":
+            continue
+        parsed = _parse_tool_content(getattr(message, "content", ""))
+        calls.append(
+            {
+                "tool": name,
+                "sources": sorted(_collect_sources(parsed)),
+                "preview": str(parsed)[:1200],
+            }
+        )
+    return calls
+
+
+def build_execution_trace(result: dict[str, Any]) -> dict[str, Any]:
+    analyses = result.get("analyses", []) or []
+    agents = []
+    for item in analyses:
+        if isinstance(item, dict) and item.get("agent") not in agents:
+            agents.append(item.get("agent"))
+
+    tool_calls = _tool_messages(result.get("researcher_messages", []))
+    tool_calls.extend(_tool_messages(result.get("analyst_messages", [])))
+
+    sources = set()
+    for call in tool_calls:
+        sources.update(call.get("sources", []))
+
+    return {
+        "agents": agents,
+        "requested_domains": result.get("requested_domains", []),
+        "allowed_research_tools": result.get("allowed_research_tools", []),
+        "tool_calls": tool_calls,
+        "data_sources": sorted(sources),
+        "errors": result.get("errors", []),
+    }
+
+
+def generate_ai_report_result(
+    company_name: str,
+    query_type: str = "full_report",
+    user_request: str | None = None,
+) -> dict[str, Any]:
+    request_text = user_request or query_type
+    initial_state = {
+        "company": company_name,
+        "query_type": query_type,
+        "user_request": request_text,
+        "active_agents": [],
+        "current_agent": None,
+        "next_agent": None,
+        "recursion_count": 0,
+        "max_recursions": 5,
+        "requested_domains": [],
+        "allowed_research_tools": [],
+        "needs_analysis": True,
+        "revision_count": 0,
+        "max_revisions": 1,
+        "feedback": None,
+        "final_report": "",
+    }
+
+    try:
+        result = biz_insight_graph.invoke(
+            initial_state,
+            _build_invoke_config(company_name, query_type, request_text),
+        )
+        report = result.get("final_report", "리포트 생성 실패 (데이터 없음)")
+        return {
+            "report": report,
+            "trace": build_execution_trace(result),
+            "state": result,
+        }
+    except Exception as e:
+        error_report = f"## ❌ {company_name} 분석 중 예외 발생\n\n상세 오류: {str(e)}"
+        return {
+            "report": error_report,
+            "trace": {
+                "agents": [],
+                "requested_domains": [],
+                "allowed_research_tools": [],
+                "tool_calls": [],
+                "data_sources": [],
+                "errors": [str(e)],
+            },
+            "state": {},
+        }
+
+
 def generate_ai_report(
     company_name: str,
     query_type: str = "full_report",
@@ -82,29 +220,4 @@ def generate_ai_report(
     Returns:
         최종 종합 리포트 (마크다운 문자열)
     """
-    request_text = user_request or query_type
-    initial_state = {
-        "company": company_name,
-        "query_type": query_type,
-        "user_request": request_text,
-        "active_agents": [],
-        "current_agent": None,
-        "next_agent": None,
-        "recursion_count": 0,
-        "max_recursions": 5, # 에이전트 내부 루프 최대 횟수 제어용
-        "requested_domains": [],
-        "allowed_research_tools": [],
-        "needs_analysis": True,
-        "revision_count": 0,
-        "max_revisions": 1,
-        "feedback": None,
-        "final_report": "",
-    }
-
-    try:
-        # 설정된 recursion limit 내에서 그래프 실행
-        # 그래프 전체 레벨의 깊이 제한을 설정 (ReAct 루프 등 무한 반복 방지)
-        result = biz_insight_graph.invoke(initial_state, {"recursion_limit": 30})
-        return result.get("final_report", "리포트 생성 실패 (데이터 없음)")
-    except Exception as e:
-        return f"## ❌ {company_name} 분석 중 예외 발생\n\n상세 오류: {str(e)}"
+    return generate_ai_report_result(company_name, query_type, user_request)["report"]

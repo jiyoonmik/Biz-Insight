@@ -1,0 +1,17 @@
+metric_code,metric_name_ko,metric_name_en,metric_category,unit,source_file
+revenue,매출액,Revenue,financial,KRW,demo_public_snapshot_2026_06_13
+operating_income,영업이익,Operating income,financial,KRW,demo_public_snapshot_2026_06_13
+net_income,당기순이익,Net income,financial,KRW,demo_public_snapshot_2026_06_13
+total_assets,자산총계,Total assets,financial,KRW,demo_public_snapshot_2026_06_13
+equity,자본총계,Total equity,financial,KRW,demo_public_snapshot_2026_06_13
+total_liabilities,부채총계,Total liabilities,financial,KRW,opendart_fnlttSinglAcntAll_2025_11011
+debt_ratio,부채비율,Debt-to-equity ratio,credit,%,demo_public_snapshot_2026_06_13
+operating_margin,영업이익률,Operating margin,financial,%,demo_public_snapshot_2026_06_13
+net_margin,순이익률,Net margin,financial,%,demo_public_snapshot_2026_06_13
+stock_close,종가,Close price,stock,KRW,naver_finance_chart_2026_06_12
+foreign_ownership_ratio,외국인보유율,Foreign ownership ratio,stock,%,naver_finance_chart_2026_06_12
+employee_rating,직원평점,Employee review rating,employee,score,demo_synthetic_portfolio_snapshot
+market_cap,시가총액,Market capitalization,investment,KRW,user_provided_demo_universe_2026_06_13
+kosdaq_rank,코스닥 시가총액 순위,KOSDAQ market-cap rank,investment,rank,user_provided_demo_universe_2026_06_13
+business_thesis,성장 논리,Business thesis,investment,text,user_provided_demo_universe_2026_06_13
+risk_focus,핵심 리스크,Risk focus,credit,text,user_provided_demo_universe_2026_06_13

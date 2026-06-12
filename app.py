@@ -3,11 +3,117 @@ import pandas as pd
 import os
 import time
 
-# --- LangGraph 멀티 에이전트 연동 ---
-from src.graph import generate_ai_report
-
 # --- Streamlit 설정 ---
 st.set_page_config(page_title="Biz-Insight 3.0", page_icon="✨", layout="wide")
+
+DEMO_THESIS = (
+    "대형주는 이미 해석된 정보가 많습니다. Biz-Insight는 공시, 뉴스, 실적, "
+    "산업 데이터, 직원 리뷰가 흩어져 있는 코스닥 성장기업을 연결해 투자자가 "
+    "성장 논리와 리스크를 빠르게 이해하도록 돕습니다."
+)
+
+
+def _configured_data_dir() -> str:
+    return os.path.abspath(os.getenv("BIZINSIGHT_DATA_DIR", os.path.join(os.path.dirname(__file__), "data")))
+
+
+def _secret_value(name: str) -> str | None:
+    try:
+        return st.secrets.get(name)
+    except Exception:
+        return None
+
+
+def configure_from_secrets() -> None:
+    data_dir = _secret_value("BIZINSIGHT_DATA_DIR")
+    if data_dir and not os.getenv("BIZINSIGHT_DATA_DIR"):
+        os.environ["BIZINSIGHT_DATA_DIR"] = str(data_dir)
+
+
+def require_password() -> None:
+    expected = os.getenv("BIZINSIGHT_APP_PASSWORD") or _secret_value("APP_PASSWORD")
+    if not expected:
+        return
+    if st.session_state.get("authenticated"):
+        return
+
+    st.title("Biz-Insight Demo")
+    password = st.text_input("비밀번호", type="password")
+    if st.button("입장"):
+        if password == expected:
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("비밀번호가 올바르지 않습니다.")
+    st.stop()
+
+
+def display_value(row: pd.Series, key: str, default: str = "N/A") -> str:
+    value = row.get(key, default)
+    if pd.isna(value) or value == "":
+        return default
+    return str(value)
+
+
+def render_execution_trace(trace: dict) -> None:
+    agents = trace.get("agents") or []
+    tool_calls = trace.get("tool_calls") or []
+    sources = trace.get("data_sources") or []
+
+    st.markdown("### 실행 흐름")
+
+    graph_lines = [
+        "digraph BizInsight {",
+        "rankdir=LR;",
+        'node [shape=box, style="rounded,filled", color="#D8DEE9", fillcolor="#F8FAFC", fontname="Arial"];',
+        '"User Request" -> "Supervisor";',
+    ]
+    agent_order = ["supervisor", "researcher", "analyst", "reviewer", "synthesis"]
+    active = [agent for agent in agent_order if agent in agents]
+    for left, right in zip(active, active[1:]):
+        graph_lines.append(f'"{left.title()}" -> "{right.title()}";')
+    for call in tool_calls[:12]:
+        tool = call.get("tool", "tool")
+        graph_lines.append(f'"Researcher" -> "{tool}";')
+    graph_lines.append("}")
+    st.graphviz_chart("\n".join(graph_lines), width="stretch")
+
+    col_a, col_b, col_c = st.columns(3)
+    col_a.metric("에이전트", len(agents))
+    col_b.metric("도구 호출", len(tool_calls))
+    col_c.metric("데이터 출처", len(sources))
+
+    if trace.get("requested_domains"):
+        st.markdown("**분석 도메인**")
+        st.write(", ".join(trace["requested_domains"]))
+
+    if tool_calls:
+        st.markdown("**호출된 도구**")
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "tool": call.get("tool"),
+                        "sources": ", ".join(call.get("sources") or []),
+                    }
+                    for call in tool_calls
+                ]
+            ),
+            width="stretch",
+            hide_index=True,
+        )
+
+    if sources:
+        st.markdown("**데이터 출처 marker**")
+        st.write(", ".join(sources))
+
+    if trace.get("errors"):
+        st.markdown("**실행 이슈**")
+        st.warning("; ".join(str(item) for item in trace["errors"]))
+
+
+configure_from_secrets()
+require_password()
 
 # --- 커스텀 CSS (프리미엄 디자인) ---
 st.markdown("""
@@ -64,7 +170,7 @@ st.markdown("""
 # --- 데이터 로드 함수 ---
 @st.cache_data
 def load_data():
-    data_dir = os.path.join(os.path.dirname(__file__), "data")
+    data_dir = _configured_data_dir()
     company_info = pd.read_csv(os.path.join(data_dir, "company_info.csv"))
     # 향후 다른 데이터들도 필요시 로드
     return company_info
@@ -78,10 +184,10 @@ except Exception as e:
 # --- 사이드바 ---
 with st.sidebar:
     st.markdown("<h2 class='gradient-text'>Biz-Insight AI</h2>", unsafe_allow_html=True)
-    st.markdown("기업 데이터를 바탕으로 AI가 즉각적으로 리포트를 생성해주는 서비스입니다.")
+    st.markdown("KOSPI 기준점과 KOSDAQ 성장기업을 같은 분석 흐름으로 비교합니다.")
     st.divider()
     
-    search_query = st.text_input("🔍 기업 검색", placeholder="예: 삼성전자, 카카오")
+    search_query = st.text_input("🔍 기업 검색", placeholder="예: 케이아이엔엑스, 덕산네오룩스")
     
     if search_query:
         st.write("---")
@@ -89,9 +195,16 @@ with st.sidebar:
 
 # --- 메인 화면 ---
 if not search_query:
-    st.title("✨ 환영합니다! Biz-Insight 3.0")
-    st.markdown("좌측 메뉴에서 분석하고자 하는 **기업명을 검색**해주세요.")
-    st.image("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070", use_container_width=True)
+    st.title("Biz-Insight")
+    st.markdown(f"### {DEMO_THESIS}")
+    st.image("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2070", width="stretch")
+    if {"시장", "데모역할", "데모포인트"}.issubset(df_company.columns):
+        st.markdown("### Demo Universe")
+        st.dataframe(
+            df_company[["회사명", "종목코드", "시장", "데모역할", "데모포인트"]],
+            width="stretch",
+            hide_index=True,
+        )
     
 else:
     # 1. 기업 기본 정보 표시
@@ -117,28 +230,29 @@ else:
             st.markdown(f"""
             <div class='glass-card'>
                 <h4>📌 종목코드</h4>
-                <p style='font-size: 24px; font-weight: bold;'>{target_company.get('종목코드', 'N/A')}</p>
+                <p style='font-size: 24px; font-weight: bold;'>{display_value(target_company, '종목코드')}</p>
             </div>
             """, unsafe_allow_html=True)
         with col2:
             st.markdown(f"""
             <div class='glass-card'>
-                <h4>🏭 주요 업종</h4>
-                <p style='font-size: 20px; font-weight: 600;'>{target_company.get('업종', 'N/A')}</p>
+                <h4>🏛️ 시장</h4>
+                <p style='font-size: 20px; font-weight: 600;'>{display_value(target_company, '시장')}</p>
             </div>
             """, unsafe_allow_html=True)
         with col3:
             st.markdown(f"""
             <div class='glass-card'>
-                <h4>👤 대표자</h4>
-                <p style='font-size: 20px; font-weight: 600;'>{target_company.get('대표자명', 'N/A')}</p>
+                <h4>🎯 데모 역할</h4>
+                <p style='font-size: 20px; font-weight: 600;'>{display_value(target_company, '데모역할')}</p>
             </div>
             """, unsafe_allow_html=True)
             
         st.markdown(f"""
         <div class='glass-card'>
-            <h4>📦 주요 제품</h4>
-            <p>{target_company.get('주요제품', 'N/A')}</p>
+            <h4>📦 주요 제품 / 분석 포인트</h4>
+            <p><strong>{display_value(target_company, '업종')}</strong> · {display_value(target_company, '주요제품')}</p>
+            <p>{display_value(target_company, '데모포인트')}</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -164,11 +278,11 @@ else:
         )
 
         default_requests = {
-            "full_report": f"{corp_name}의 기업 개요, 재무 안정성, 신용 리스크, 투자 매력도, 직원 리뷰를 종합해서 분석해줘.",
-            "financial": f"{corp_name}의 재무 성과와 안정성을 산업 평균과 비교해서 분석해줘.",
+            "full_report": f"{corp_name}의 공시/실적, 산업 맥락, 주가 흐름, 직원 리뷰를 연결해서 성장 논리와 핵심 리스크를 분석해줘.",
+            "financial": f"{corp_name}의 실적과 재무 안정성을 산업 맥락과 비교해서 분석해줘.",
             "credit": f"{corp_name}의 신용등급, 부채 상환능력, 재무 건전성 관점에서 리스크를 분석해줘.",
             "overview": f"{corp_name}의 핵심 사업과 기업 기본 정보를 요약해줘.",
-            "investment": f"{corp_name}의 투자 지표와 주가 흐름을 바탕으로 투자 매력도를 분석해줘.",
+            "investment": f"{corp_name}의 성장 논리, 시장 위치, 주가 흐름을 바탕으로 투자 관점의 체크포인트를 분석해줘.",
             "review": f"{corp_name}의 직원 리뷰를 바탕으로 조직문화, 복지, 워라밸 리스크를 분석해줘.",
             "risk": f"{corp_name}의 재무, 신용, 주가, 조직문화 데이터를 종합해서 주요 리스크와 대응 포인트를 분석해줘.",
         }
@@ -183,8 +297,12 @@ else:
             with st.spinner(f"'{corp_name}' 데이터를 분석 중입니다. 약 1~2분 정도 소요될 수 있습니다..."):
                 start_time = time.time()
                 try:
+                    from src.graph import generate_ai_report_result
+
                     # LangGraph 호출
-                    report = generate_ai_report(corp_name, query_type, user_request)
+                    result = generate_ai_report_result(corp_name, query_type, user_request)
+                    report = result["report"]
+                    trace = result["trace"]
                     st.success(f"🎉 분석 완료! (소요 시간: {time.time() - start_time:.1f}초)")
                     
                     st.markdown("""
@@ -194,6 +312,9 @@ else:
                     st.markdown("""
                     </div>
                     """, unsafe_allow_html=True)
+
+                    with st.expander("리포트 작성 과정 보기", expanded=False):
+                        render_execution_trace(trace)
                     
                 except Exception as e:
                     st.error(f"리포트 생성 중 오류가 발생했습니다: {e}")

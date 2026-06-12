@@ -1,6 +1,7 @@
 import time
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from src.config import get_llm, rate_limited, INTER_AGENT_DELAY_SEC
+from src.agents.tool_result_compactor import compact_tool_result, summarize_tool_messages
 from src.tools.langchain_tools import ANALYST_TOOLS
 
 
@@ -63,8 +64,15 @@ def analyst_node(state: dict) -> dict:
 
     # ── 호출 횟수 제어 ──
     if recursion_count >= max_recursions:
+        summary = summarize_tool_messages(messages)
         return {
-            "analyses": [{"agent": "analyst", "content": "⚠️ 최대 분석 횟수를 초과하여 조기 종료되었습니다."}],
+            "analyses": [{
+                "agent": "analyst",
+                "content": "⚠️ 최대 분석 횟수에 도달하여 tool 사용을 종료합니다.\n\n"
+                           "아래 도구 근거를 바탕으로 최종 종합 단계에서 보수적으로 요약해야 합니다.\n\n"
+                           f"{summary}",
+            }],
+            "errors": [f"analyst_react_limit_reached: {recursion_count}/{max_recursions}"],
             "next_agent": "reviewer",
             **feedback_update
         }
@@ -82,9 +90,10 @@ def analyst_node(state: dict) -> dict:
                     tool_result = tool_func.invoke(tool_call["args"])
                 except Exception as e:
                     tool_result = f"Error: {str(e)}"
+                compact_result = compact_tool_result(tool_call["name"], tool_result)
                 
                 tool_msg = ToolMessage(
-                    content=str(tool_result),
+                    content=str(compact_result),
                     tool_call_id=tool_call["id"],
                     name=tool_call["name"]
                 )
@@ -105,10 +114,24 @@ def analyst_node(state: dict) -> dict:
     else:
         # 분석 완료
         content = _content_to_text(response.content)
+        finish_reason = response.response_metadata.get("finish_reason") if response.response_metadata else None
+        malformed = finish_reason == "MALFORMED_FUNCTION_CALL"
+        if malformed or not content.strip():
+            tool_summary = summarize_tool_messages(messages)
+            content = (
+                "⚠️ Analyst LLM이 유효한 분석 본문을 반환하지 못했습니다.\n\n"
+                f"- finish_reason: {finish_reason}\n"
+                "- 처리: 수집된 tool 근거 요약을 fallback 분석으로 전달합니다.\n\n"
+                f"{tool_summary}"
+            )
+            errors = [f"analyst_invalid_response: finish_reason={finish_reason}"]
+        else:
+            errors = []
         time.sleep(INTER_AGENT_DELAY_SEC)
         return {
             "analyst_messages": [response],
             "analyses": [{"agent": "analyst", "content": content}],
+            "errors": errors,
             "recursion_count": 0, # 다음 에이전트를 위해 초기화
             "next_agent": "reviewer", # 다음 단계는 품질 검토 (Reviewer)
             **feedback_update

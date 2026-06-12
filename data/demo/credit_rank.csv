@@ -1,0 +1,9 @@
+corp,stock_code,rank,rating,agency,source_file
+삼성전자,005930,AA,AA,DemoModel,demo_model_not_external_credit_rating
+현대자동차,005380,A+,A+,DemoModel,demo_model_not_external_credit_rating
+카카오,035720,A-,A-,DemoModel,demo_model_not_external_credit_rating
+케이아이엔엑스,093320,BBB+,BBB+,DemoModel,demo_model_not_external_credit_rating
+씨앤씨인터내셔널,352480,BBB,BBB,DemoModel,demo_model_not_external_credit_rating
+제이브이엠,054950,BBB+,BBB+,DemoModel,demo_model_not_external_credit_rating
+덕산네오룩스,213420,A-,A-,DemoModel,demo_model_not_external_credit_rating
+인텔리안테크,189300,BBB+,BBB+,DemoModel,demo_model_not_external_credit_rating

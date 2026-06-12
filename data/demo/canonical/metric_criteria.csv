@@ -1,0 +1,18 @@
+metric_code,criterion_code,evidence_direction,rationale
+revenue,growth,higher_is_better,Revenue scale and trend are core growth evidence.
+operating_income,profitability,higher_is_better,Operating profit indicates recurring earning power.
+net_income,profitability,higher_is_better,Net income captures final profitability after non-operating items.
+operating_margin,profitability,higher_is_better,Margin level supports profitability assessment.
+net_margin,profitability,higher_is_better,Net margin supports profitability assessment.
+total_assets,market_position,higher_is_better,Asset base is a proxy for business scale.
+equity,leverage,higher_is_better,Equity buffer supports financial stability.
+total_liabilities,leverage,lower_is_better,Liability scale supports leverage assessment.
+debt_ratio,leverage,lower_is_better,Debt ratio is a direct leverage signal.
+debt_ratio,going_concern,lower_is_better,High leverage can weaken going-concern resilience.
+stock_close,market_position,higher_is_better,Recent market price helps summarize market signal.
+foreign_ownership_ratio,market_position,higher_is_better,Foreign ownership can indicate external investor interest.
+employee_rating,internal_control,higher_is_better,Employee sentiment can indicate organization risk.
+market_cap,market_position,higher_is_better,Market capitalization frames scale and investor attention.
+kosdaq_rank,market_position,lower_is_better,KOSDAQ rank highlights relative visibility among growth companies.
+business_thesis,growth,higher_is_better,"The thesis connects scattered filings, industry context, news, and business model signals."
+risk_focus,going_concern,lower_is_better,Risk focus summarizes what investors should verify before trusting the growth story.

@@ -1,0 +1,9 @@
+corp,stock_code,year,up,down,source_file
+삼성전자,005930,2026,"반도체 업황 회복과 글로벌 브랜드 경쟁력이 강점이라는 데모 evidence입니다.","대규모 조직의 실행 속도와 사업부별 성과 편차가 리스크라는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+현대자동차,005380,2026,"전동화와 글로벌 생산망이 강점이라는 데모 evidence입니다.","관세와 원가 부담이 수익성 리스크라는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+카카오,035720,2026,"국내 플랫폼 접점과 AI 서비스 확장성이 강점이라는 데모 evidence입니다.","규제와 수익성 회복 속도가 리스크라는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+케이아이엔엑스,093320,2026,"데이터센터·IX·CDN 수요가 누적되는 인프라형 성장 스토리라는 데모 evidence입니다.","설비투자와 경쟁 구도, 낮은 정보 노출도를 함께 봐야 한다는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+씨앤씨인터내셔널,352480,2026,"K-뷰티 ODM 고객사와 수출 트렌드가 매출 성장 논리로 연결된다는 데모 evidence입니다.","고객 집중도와 색조 트렌드 변화, 원가·환율 민감도를 봐야 한다는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+제이브이엠,054950,2026,"약국·병원 자동화 수요가 실적 기반 성장 논리로 연결된다는 데모 evidence입니다.","의료기관 투자 사이클과 해외 확장 속도를 확인해야 한다는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+덕산네오룩스,213420,2026,"OLED 소재 제품 믹스와 전방 디스플레이 사이클을 함께 볼 수 있다는 데모 evidence입니다.","패널 고객사 투자와 소재 단가 변동을 확인해야 한다는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot
+인텔리안테크,189300,2026,"위성통신 안테나 사업이 우주항공 테마와 실체 사업을 연결한다는 데모 evidence입니다.","수주 변동성과 저궤도 위성망 투자 속도를 확인해야 한다는 데모 evidence입니다.",demo_synthetic_portfolio_snapshot

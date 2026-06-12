@@ -1,0 +1,9 @@
+summary_id,stock_code,period_type,period_value,positive_summary,negative_summary,rating,review_count,source_file
+005930_2026_demo,005930,year,2026,"반도체 업황 회복과 글로벌 브랜드 경쟁력을 긍정 요인으로 보는 데모 요약입니다.","대규모 조직의 의사결정 속도와 사업부별 성과 편차를 리스크로 보는 데모 요약입니다.",3.7,0,demo_synthetic_portfolio_snapshot
+005380_2026_demo,005380,year,2026,"전동화, SUV, 글로벌 생산망을 긍정 요인으로 보는 데모 요약입니다.","관세와 원가 부담, 시장별 수요 둔화를 리스크로 보는 데모 요약입니다.",3.5,0,demo_synthetic_portfolio_snapshot
+035720_2026_demo,035720,year,2026,"국내 메신저 플랫폼 지배력과 AI/콘텐츠 확장 가능성을 긍정 요인으로 보는 데모 요약입니다.","규제, 수익성 회복, 계열사 포트폴리오 정리를 리스크로 보는 데모 요약입니다.",3.2,0,demo_synthetic_portfolio_snapshot
+093320_2026_demo,093320,year,2026,"데이터센터와 IX/CDN 인프라 수요가 누적되는 조용한 성장 기업이라는 데모 요약입니다.","낮은 정보 노출도와 설비투자 부담, 클라우드 경쟁 구도 확인이 필요하다는 데모 요약입니다.",3.6,0,demo_synthetic_portfolio_snapshot
+352480_2026_demo,352480,year,2026,"K-뷰티 ODM 수요와 고객사 확장, 수출 트렌드가 연결되는 기업이라는 데모 요약입니다.","브랜드 고객 집중도, 원가·환율, 색조 트렌드 변동성을 확인해야 한다는 데모 요약입니다.",3.4,0,demo_synthetic_portfolio_snapshot
+054950_2026_demo,054950,year,2026,"약국·병원 자동화라는 실수요 기반 헬스케어 장비 기업이라는 데모 요약입니다.","의료기관 투자 사이클과 해외 확장 속도, 제품 교체 수요 확인이 필요하다는 데모 요약입니다.",3.5,0,demo_synthetic_portfolio_snapshot
+213420_2026_demo,213420,year,2026,"OLED 소재 제품 믹스와 전방 디스플레이 사이클을 연결해 볼 수 있는 기업이라는 데모 요약입니다.","패널 고객사 투자 사이클, 소재 단가, 제품 세대 전환 리스크를 확인해야 한다는 데모 요약입니다.",3.3,0,demo_synthetic_portfolio_snapshot
+189300_2026_demo,189300,year,2026,"위성통신과 우주항공 테마가 실제 안테나·터미널 사업과 연결되는 기업이라는 데모 요약입니다.","수주 변동성, 저궤도 위성망 투자 속도, 재고·운전자본 부담을 확인해야 한다는 데모 요약입니다.",3.4,0,demo_synthetic_portfolio_snapshot

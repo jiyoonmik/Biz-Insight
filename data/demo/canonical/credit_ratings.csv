@@ -1,0 +1,9 @@
+rating_id,stock_code,year,agency,bond_type,rating_value,predicted_rating_value,is_predicted,source_file
+005930_2026_demo_model,005930,2026,DemoModel,,AA,,True,demo_model_not_external_credit_rating
+005380_2026_demo_model,005380,2026,DemoModel,,A+,,True,demo_model_not_external_credit_rating
+035720_2026_demo_model,035720,2026,DemoModel,,A-,,True,demo_model_not_external_credit_rating
+093320_2026_demo_model,093320,2026,DemoModel,,BBB+,,True,demo_model_not_external_credit_rating
+352480_2026_demo_model,352480,2026,DemoModel,,BBB,,True,demo_model_not_external_credit_rating
+054950_2026_demo_model,054950,2026,DemoModel,,BBB+,,True,demo_model_not_external_credit_rating
+213420_2026_demo_model,213420,2026,DemoModel,,A-,,True,demo_model_not_external_credit_rating
+189300_2026_demo_model,189300,2026,DemoModel,,BBB+,,True,demo_model_not_external_credit_rating

@@ -1,0 +1,9 @@
+stock_code,preferred_name,sector_code,sector_name,main_product,listing_date,settlement_month,representative_name,homepage,region,source_file
+005930,삼성전자,sector_electronics,전기전자,반도체 스마트폰 디스플레이 가전,1975-06-11,12월,전영현,https://www.samsung.com/sec,경기도 수원시,demo_public_snapshot_2026_06_13
+005380,현대자동차,sector_auto,운수장비,승용차 SUV 전기차 수소차,1974-06-28,12월,장재훈,https://www.hyundai.com,서울특별시,demo_public_snapshot_2026_06_13
+035720,카카오,sector_platform,서비스업,카카오톡 플랫폼 콘텐츠 핀테크 모빌리티,2017-07-10,12월,정신아,https://www.kakaocorp.com,제주특별자치도,demo_public_snapshot_2026_06_13
+093320,케이아이엔엑스,sector_internet_infra,인터넷 인프라,데이터센터 IX CDN 클라우드,,,,,demo_public_snapshot_2026_06_13
+352480,씨앤씨인터내셔널,sector_beauty_odm,화장품 ODM,색조 화장품 ODM K-뷰티 수출,,,,,demo_public_snapshot_2026_06_13
+054950,제이브이엠,sector_healthcare_equipment,헬스케어 장비,약국 병원 조제 자동화 장비,,,,,demo_public_snapshot_2026_06_13
+213420,덕산네오룩스,sector_oled_materials,OLED 소재,OLED 유기재료 디스플레이 소재,,,,,demo_public_snapshot_2026_06_13
+189300,인텔리안테크,sector_satellite_comm,위성통신 장비,위성통신 안테나 해상·저궤도 통신 장비,,,,,demo_public_snapshot_2026_06_13

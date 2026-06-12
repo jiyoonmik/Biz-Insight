@@ -1,0 +1,102 @@
+observation_id,subject_type,subject_id,metric_code,period_type,period_value,numeric_value,text_value,unit,source_file
+005930_revenue_2026_q1,company,005930,revenue,quarter,2026-Q1,133000000000000,,KRW,news_snapshot_2026_q1_guidance
+005930_operating_income_2026_q1,company,005930,operating_income,quarter,2026-Q1,57200000000000,,KRW,news_snapshot_2026_q1_guidance
+005930_stock_close_2026_06_12,company,005930,stock_close,date,2026-06-12,322500,,KRW,naver_finance_chart_2026_06_12
+005930_foreign_ownership_2026_06_12,company,005930,foreign_ownership_ratio,date,2026-06-12,47.58,,%,naver_finance_chart_2026_06_12
+005930_employee_rating_2026,company,005930,employee_rating,year,2026,3.7,,score,demo_synthetic_portfolio_snapshot
+005380_revenue_2026_q1,company,005380,revenue,quarter,2026-Q1,45939000000000,,KRW,news_snapshot_2026_q1_results
+005380_operating_income_2026_q1,company,005380,operating_income,quarter,2026-Q1,2515000000000,,KRW,news_snapshot_2026_q1_results
+005380_net_income_2026_q1,company,005380,net_income,quarter,2026-Q1,2585000000000,,KRW,news_snapshot_2026_q1_results
+005380_stock_close_2026_06_12,company,005380,stock_close,date,2026-06-12,607000,,KRW,naver_finance_chart_2026_06_12
+005380_foreign_ownership_2026_06_12,company,005380,foreign_ownership_ratio,date,2026-06-12,25.18,,%,naver_finance_chart_2026_06_12
+005380_employee_rating_2026,company,005380,employee_rating,year,2026,3.5,,score,demo_synthetic_portfolio_snapshot
+035720_stock_close_2026_06_12,company,035720,stock_close,date,2026-06-12,41500,,KRW,naver_finance_chart_2026_06_12
+035720_foreign_ownership_2026_06_12,company,035720,foreign_ownership_ratio,date,2026-06-12,28.25,,%,naver_finance_chart_2026_06_12
+035720_employee_rating_2026,company,035720,employee_rating,year,2026,3.2,,score,demo_synthetic_portfolio_snapshot
+093320_market_cap_2026_06_13,company,093320,market_cap,date,2026-06-13,611000000000,,KRW,user_provided_demo_universe_2026_06_13
+093320_kosdaq_rank_2026_06_13,company,093320,kosdaq_rank,date,2026-06-13,170,,rank,user_provided_demo_universe_2026_06_13
+093320_business_thesis_2026,company,093320,business_thesis,year,2026,,데이터센터·IX·CDN·클라우드 수요가 누적되는 조용한 인프라형 성장기업입니다.,,user_provided_demo_universe_2026_06_13
+093320_risk_focus_2026,company,093320,risk_focus,year,2026,,"설비투자 부담, 클라우드 경쟁 구도, 낮은 정보 노출도를 함께 확인해야 합니다.",,user_provided_demo_universe_2026_06_13
+093320_stock_close_2026_06_12,company,093320,stock_close,date,2026-06-12,125200,,KRW,naver_finance_chart_2026_06_12
+093320_foreign_ownership_2026_06_12,company,093320,foreign_ownership_ratio,date,2026-06-12,43.83,,%,naver_finance_chart_2026_06_12
+093320_employee_rating_2026,company,093320,employee_rating,year,2026,3.6,,score,demo_synthetic_portfolio_snapshot
+352480_market_cap_2026_06_13,company,352480,market_cap,date,2026-06-13,256700000000,,KRW,user_provided_demo_universe_2026_06_13
+352480_kosdaq_rank_2026_06_13,company,352480,kosdaq_rank,date,2026-06-13,368,,rank,user_provided_demo_universe_2026_06_13
+352480_business_thesis_2026,company,352480,business_thesis,year,2026,,"K-뷰티 ODM 수요, 고객사 확장, 수출 트렌드, 마진 개선 논리를 연결해 설명하기 좋은 기업입니다.",,user_provided_demo_universe_2026_06_13
+352480_risk_focus_2026,company,352480,risk_focus,year,2026,,"고객사 집중도, 색조 화장품 트렌드 변화, 원가와 환율 민감도를 확인해야 합니다.",,user_provided_demo_universe_2026_06_13
+352480_stock_close_2026_06_12,company,352480,stock_close,date,2026-06-12,18830,,KRW,naver_finance_chart_2026_06_12
+352480_foreign_ownership_2026_06_12,company,352480,foreign_ownership_ratio,date,2026-06-12,0.89,,%,naver_finance_chart_2026_06_12
+352480_employee_rating_2026,company,352480,employee_rating,year,2026,3.4,,score,demo_synthetic_portfolio_snapshot
+054950_market_cap_2026_06_13,company,054950,market_cap,date,2026-06-13,271400000000,,KRW,user_provided_demo_universe_2026_06_13
+054950_kosdaq_rank_2026_06_13,company,054950,kosdaq_rank,date,2026-06-13,349,,rank,user_provided_demo_universe_2026_06_13
+054950_business_thesis_2026,company,054950,business_thesis,year,2026,,"약국·병원 조제 자동화라는 실수요 기반 헬스케어 장비 기업으로, 바이오보다 실적 해석이 안정적입니다.",,user_provided_demo_universe_2026_06_13
+054950_risk_focus_2026,company,054950,risk_focus,year,2026,,"의료기관 투자 사이클, 해외 확장 속도, 제품 교체 수요를 확인해야 합니다.",,user_provided_demo_universe_2026_06_13
+054950_stock_close_2026_06_12,company,054950,stock_close,date,2026-06-12,22200,,KRW,naver_finance_chart_2026_06_12
+054950_foreign_ownership_2026_06_12,company,054950,foreign_ownership_ratio,date,2026-06-12,16.94,,%,naver_finance_chart_2026_06_12
+054950_employee_rating_2026,company,054950,employee_rating,year,2026,3.5,,score,demo_synthetic_portfolio_snapshot
+213420_market_cap_2026_06_13,company,213420,market_cap,date,2026-06-13,910100000000,,KRW,user_provided_demo_universe_2026_06_13
+213420_kosdaq_rank_2026_06_13,company,213420,kosdaq_rank,date,2026-06-13,114,,rank,user_provided_demo_universe_2026_06_13
+213420_business_thesis_2026,company,213420,business_thesis,year,2026,,"OLED 소재 기업으로 전방 디스플레이 산업, 고객사 사이클, 제품 믹스 변화를 연결해 분석하기 좋습니다.",,user_provided_demo_universe_2026_06_13
+213420_risk_focus_2026,company,213420,risk_focus,year,2026,,"패널 고객사 투자 사이클, 소재 단가, 제품 세대 전환 리스크를 확인해야 합니다.",,user_provided_demo_universe_2026_06_13
+213420_stock_close_2026_06_12,company,213420,stock_close,date,2026-06-12,36650,,KRW,naver_finance_chart_2026_06_12
+213420_foreign_ownership_2026_06_12,company,213420,foreign_ownership_ratio,date,2026-06-12,12.12,,%,naver_finance_chart_2026_06_12
+213420_employee_rating_2026,company,213420,employee_rating,year,2026,3.3,,score,demo_synthetic_portfolio_snapshot
+189300_market_cap_2026_06_13,company,189300,market_cap,date,2026-06-13,1130000000000,,KRW,user_provided_demo_universe_2026_06_13
+189300_kosdaq_rank_2026_06_13,company,189300,kosdaq_rank,date,2026-06-13,91,,rank,user_provided_demo_universe_2026_06_13
+189300_business_thesis_2026,company,189300,business_thesis,year,2026,,위성통신·우주항공 테마성이 있지만 안테나와 통신장비 실체 사업이 있어 설명력이 높은 기업입니다.,,user_provided_demo_universe_2026_06_13
+189300_risk_focus_2026,company,189300,risk_focus,year,2026,,"수주 변동성, 저궤도 위성망 투자 속도, 운전자본 부담을 확인해야 합니다.",,user_provided_demo_universe_2026_06_13
+189300_stock_close_2026_06_12,company,189300,stock_close,date,2026-06-12,104800,,KRW,naver_finance_chart_2026_06_12
+189300_foreign_ownership_2026_06_12,company,189300,foreign_ownership_ratio,date,2026-06-12,23.23,,%,naver_finance_chart_2026_06_12
+189300_employee_rating_2026,company,189300,employee_rating,year,2026,3.4,,score,demo_synthetic_portfolio_snapshot
+005930_total_assets_2025_11011,company,005930,total_assets,fiscal_year,2025,566942110000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005930_equity_2025_11011,company,005930,equity,fiscal_year,2025,436320337000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005930_total_liabilities_2025_11011,company,005930,total_liabilities,fiscal_year,2025,130621773000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005930_operating_income_2025_11011,company,005930,operating_income,fiscal_year,2025,43601051000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005930_net_income_2025_11011,company,005930,net_income,fiscal_year,2025,45206805000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005930_revenue_2025_11011,company,005930,revenue,fiscal_year,2025,333605938000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005380_total_assets_2025_11011,company,005380,total_assets,fiscal_year,2025,368844849000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005380_equity_2025_11011,company,005380,equity,fiscal_year,2025,127648237000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005380_total_liabilities_2025_11011,company,005380,total_liabilities,fiscal_year,2025,241196612000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005380_operating_income_2025_11011,company,005380,operating_income,fiscal_year,2025,11467851000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005380_revenue_2025_11011,company,005380,revenue,fiscal_year,2025,186254472000000.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+035720_total_assets_2025_11011,company,035720,total_assets,fiscal_year,2025,27783524545811.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+035720_equity_2025_11011,company,035720,equity,fiscal_year,2025,15224922016050.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+035720_total_liabilities_2025_11011,company,035720,total_liabilities,fiscal_year,2025,12558602529761.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+035720_operating_income_2025_11011,company,035720,operating_income,fiscal_year,2025,732036535379.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+035720_revenue_2025_11011,company,035720,revenue,fiscal_year,2025,8099147815086.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+093320_total_assets_2025_11011,company,093320,total_assets,fiscal_year,2025,337890187127.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+093320_equity_2025_11011,company,093320,equity,fiscal_year,2025,248000374613.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+093320_total_liabilities_2025_11011,company,093320,total_liabilities,fiscal_year,2025,89889812514.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+352480_total_assets_2025_11011,company,352480,total_assets,fiscal_year,2025,437835367957.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+352480_equity_2025_11011,company,352480,equity,fiscal_year,2025,354424638722.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+352480_total_liabilities_2025_11011,company,352480,total_liabilities,fiscal_year,2025,83410729235.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+352480_operating_income_2025_11011,company,352480,operating_income,fiscal_year,2025,22170749656.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+352480_net_income_2025_11011,company,352480,net_income,fiscal_year,2025,14286675994.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+352480_revenue_2025_11011,company,352480,revenue,fiscal_year,2025,288477800460.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+054950_total_assets_2025_11011,company,054950,total_assets,fiscal_year,2025,319127680911.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+054950_equity_2025_11011,company,054950,equity,fiscal_year,2025,233947355120.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+054950_total_liabilities_2025_11011,company,054950,total_liabilities,fiscal_year,2025,85180325791.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+054950_operating_income_2025_11011,company,054950,operating_income,fiscal_year,2025,33276260919.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+054950_net_income_2025_11011,company,054950,net_income,fiscal_year,2025,28350804537.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+213420_total_assets_2025_11011,company,213420,total_assets,fiscal_year,2025,714152331754.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+213420_equity_2025_11011,company,213420,equity,fiscal_year,2025,470459612961.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+213420_total_liabilities_2025_11011,company,213420,total_liabilities,fiscal_year,2025,243692718793.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+213420_operating_income_2025_11011,company,213420,operating_income,fiscal_year,2025,60742428308.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+213420_net_income_2025_11011,company,213420,net_income,fiscal_year,2025,53957306202.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+213420_revenue_2025_11011,company,213420,revenue,fiscal_year,2025,344309797191.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+189300_revenue_2025_11011,company,189300,revenue,fiscal_year,2025,319628351040.0,,KRW,opendart_fnlttSinglAcntAll_2025_11011
+005380_debt_ratio_2025_opendart,company,005380,debt_ratio,fiscal_year,2025,188.9541,,%,derived_from_opendart_assets_equity_2025
+005380_operating_margin_2025_opendart,company,005380,operating_margin,fiscal_year,2025,6.1571,,%,derived_from_opendart_revenue_operating_income_2025
+005930_debt_ratio_2025_opendart,company,005930,debt_ratio,fiscal_year,2025,29.9371,,%,derived_from_opendart_assets_equity_2025
+005930_operating_margin_2025_opendart,company,005930,operating_margin,fiscal_year,2025,13.0696,,%,derived_from_opendart_revenue_operating_income_2025
+005930_net_margin_2025_opendart,company,005930,net_margin,fiscal_year,2025,13.551,,%,derived_from_opendart_revenue_net_income_2025
+035720_debt_ratio_2025_opendart,company,035720,debt_ratio,fiscal_year,2025,82.4871,,%,derived_from_opendart_assets_equity_2025
+035720_operating_margin_2025_opendart,company,035720,operating_margin,fiscal_year,2025,9.0384,,%,derived_from_opendart_revenue_operating_income_2025
+054950_debt_ratio_2025_opendart,company,054950,debt_ratio,fiscal_year,2025,36.41,,%,derived_from_opendart_assets_equity_2025
+093320_debt_ratio_2025_opendart,company,093320,debt_ratio,fiscal_year,2025,36.2458,,%,derived_from_opendart_assets_equity_2025
+213420_debt_ratio_2025_opendart,company,213420,debt_ratio,fiscal_year,2025,51.7989,,%,derived_from_opendart_assets_equity_2025
+213420_operating_margin_2025_opendart,company,213420,operating_margin,fiscal_year,2025,17.6418,,%,derived_from_opendart_revenue_operating_income_2025
+213420_net_margin_2025_opendart,company,213420,net_margin,fiscal_year,2025,15.6712,,%,derived_from_opendart_revenue_net_income_2025
+352480_debt_ratio_2025_opendart,company,352480,debt_ratio,fiscal_year,2025,23.5341,,%,derived_from_opendart_assets_equity_2025
+352480_operating_margin_2025_opendart,company,352480,operating_margin,fiscal_year,2025,7.6854,,%,derived_from_opendart_revenue_operating_income_2025
+352480_net_margin_2025_opendart,company,352480,net_margin,fiscal_year,2025,4.9524,,%,derived_from_opendart_revenue_net_income_2025

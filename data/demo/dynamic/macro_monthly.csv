@@ -1,0 +1,5 @@
+metric_code,period_type,period_value,numeric_value,unit,source_file
+kr_policy_rate,month,2026-05,2.50,%,demo_macro_placeholder_update_before_public_release
+us_policy_rate,month,2026-05,4.25,%,demo_macro_placeholder_update_before_public_release
+kr_standard_yield,month,2026-05,2.90,%,demo_macro_placeholder_update_before_public_release
+uskor_exchange_average,month,2026-05,1370.0,KRW/USD,demo_macro_placeholder_update_before_public_release
