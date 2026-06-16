@@ -16,6 +16,7 @@ from src.agents.researcher import researcher_node
 from src.agents.analyst import analyst_node
 from src.agents.reviewer import reviewer_node
 from src.agents.synthesis import synthesis_node
+from src.config import langsmith_project_name, langsmith_tracing_enabled
 
 def dynamic_router(state: dict) -> str:
     """
@@ -84,6 +85,16 @@ def _build_invoke_config(company_name: str, query_type: str, user_request: str) 
             "user_request": user_request,
         },
     }
+
+
+def _invoke_with_optional_tracing(initial_state: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    if not langsmith_tracing_enabled():
+        return biz_insight_graph.invoke(initial_state, config)
+
+    from langchain_core.tracers.context import tracing_v2_enabled
+
+    with tracing_v2_enabled(project_name=langsmith_project_name(), tags=config.get("tags")):
+        return biz_insight_graph.invoke(initial_state, config)
 
 
 def _parse_tool_content(content: Any) -> Any:
@@ -178,10 +189,8 @@ def generate_ai_report_result(
     }
 
     try:
-        result = biz_insight_graph.invoke(
-            initial_state,
-            _build_invoke_config(company_name, query_type, request_text),
-        )
+        config = _build_invoke_config(company_name, query_type, request_text)
+        result = _invoke_with_optional_tracing(initial_state, config)
         report = result.get("final_report", "리포트 생성 실패 (데이터 없음)")
         return {
             "report": report,

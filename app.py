@@ -37,10 +37,30 @@ def configure_from_secrets() -> None:
     if not os.getenv("BIZINSIGHT_DATA_DIR"):
         os.environ["BIZINSIGHT_DATA_DIR"] = str(data_dir or _default_data_dir())
 
-    for name in ("GOOGLE_API_KEY", "DART_API_KEY", "LANGSMITH_API_KEY", "LANGCHAIN_API_KEY"):
+    for name in (
+        "GOOGLE_API_KEY",
+        "DART_API_KEY",
+        "LANGSMITH_TRACING",
+        "LANGSMITH_TRACING_V2",
+        "LANGCHAIN_TRACING_V2",
+        "LANGCHAIN_TRACING",
+        "LANGSMITH_API_KEY",
+        "LANGCHAIN_API_KEY",
+        "LANGSMITH_PROJECT",
+        "LANGCHAIN_PROJECT",
+        "LANGSMITH_ENDPOINT",
+        "LANGCHAIN_ENDPOINT",
+    ):
         value = _secret_value(name)
         if value and not os.getenv(name):
             os.environ[name] = str(value)
+
+    try:
+        from src.config import configure_langsmith_environment
+
+        configure_langsmith_environment()
+    except Exception:
+        pass
 
 
 def require_password() -> None:
@@ -392,7 +412,7 @@ if not search_query:
         st.markdown("""
         <div class='metric-card accent-amber'>
             <h4>Analysis Stack</h4>
-            <div class='value'>Static KG + Dynamic Signals</div>
+            <div class='value'>Canonical Context + Dynamic Signals</div>
             <div class='sub'>재무제표, 신용, 주가, 리뷰 데이터를 동일한 질의 흐름으로 조회합니다.</div>
         </div>
         """, unsafe_allow_html=True)
@@ -406,7 +426,7 @@ if not search_query:
         """, unsafe_allow_html=True)
 
     if {"시장", "데모역할", "데모포인트"}.issubset(df_company.columns):
-        st.markdown("### 분석 대상 기업")
+        st.markdown("### SAMPLE 분석 대상 기업")
         st.dataframe(
             df_company[["회사명", "종목코드", "시장", "데모역할", "데모포인트"]],
             width="stretch",

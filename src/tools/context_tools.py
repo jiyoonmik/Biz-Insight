@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from langchain_core.tools import tool
 
-from src.kg.queries import (
+from src.context.queries import (
     get_credit_ratings,
     get_criteria_evidence,
     get_knowledge_context,
@@ -12,7 +12,7 @@ from src.kg.queries import (
 
 @tool
 def tool_get_company_knowledge_context(stock_code: str, year: int | None = None) -> dict:
-    """stock_code 기준으로 기업 KG 프로필, 재무 관측값, 신용등급, 평가기준 근거, 위험 신호를 조회합니다."""
+    """stock_code 기준으로 기업 분석 컨텍스트, 재무 관측값, 신용등급, 평가기준 근거, 위험 신호를 조회합니다."""
     return get_knowledge_context(stock_code, year=year)
 
 
@@ -34,10 +34,9 @@ def tool_get_credit_rating_history(stock_code: str) -> dict:
     return {"stock_code": stock_code, "credit_ratings": get_credit_ratings(stock_code)}
 
 
-KG_TOOLS = [
+CONTEXT_TOOLS = [
     tool_search_company_by_name,
     tool_get_company_knowledge_context,
     tool_get_criteria_evidence,
     tool_get_credit_rating_history,
 ]
-

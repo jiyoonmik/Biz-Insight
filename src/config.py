@@ -10,6 +10,87 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _truthy(value: str | None) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+
+
+def _first_env(*names: str) -> str | None:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value.strip() != "":
+            return value
+    return None
+
+
+def _copy_env(source: str, target: str) -> bool:
+    value = os.getenv(source)
+    if value and not os.getenv(target):
+        os.environ[target] = value
+        return True
+    return False
+
+
+def _clear_langsmith_env_cache() -> None:
+    try:
+        from langsmith.utils import get_env_var
+
+        get_env_var.cache_clear()
+    except Exception:
+        pass
+
+
+def configure_langsmith_environment() -> None:
+    """Normalize LangSmith/LangChain env aliases before tracing starts."""
+    changed = False
+    changed |= _copy_env("LANGSMITH_API_KEY", "LANGCHAIN_API_KEY")
+    changed |= _copy_env("LANGCHAIN_API_KEY", "LANGSMITH_API_KEY")
+    changed |= _copy_env("LANGSMITH_PROJECT", "LANGCHAIN_PROJECT")
+    changed |= _copy_env("LANGCHAIN_PROJECT", "LANGSMITH_PROJECT")
+    changed |= _copy_env("LANGSMITH_ENDPOINT", "LANGCHAIN_ENDPOINT")
+    changed |= _copy_env("LANGCHAIN_ENDPOINT", "LANGSMITH_ENDPOINT")
+
+    tracing_value = _first_env(
+        "LANGSMITH_TRACING",
+        "LANGSMITH_TRACING_V2",
+        "LANGCHAIN_TRACING_V2",
+        "LANGCHAIN_TRACING",
+    )
+    if tracing_value is not None:
+        normalized = "true" if _truthy(tracing_value) else "false"
+        for name in (
+            "LANGSMITH_TRACING",
+            "LANGSMITH_TRACING_V2",
+            "LANGCHAIN_TRACING_V2",
+            "LANGCHAIN_TRACING",
+        ):
+            if os.getenv(name) != normalized:
+                os.environ[name] = normalized
+                changed = True
+
+    if changed:
+        _clear_langsmith_env_cache()
+
+
+def langsmith_tracing_enabled() -> bool:
+    configure_langsmith_environment()
+    tracing_value = _first_env(
+        "LANGSMITH_TRACING",
+        "LANGSMITH_TRACING_V2",
+        "LANGCHAIN_TRACING_V2",
+        "LANGCHAIN_TRACING",
+    )
+    api_key = _first_env("LANGSMITH_API_KEY", "LANGCHAIN_API_KEY")
+    return _truthy(tracing_value) and bool(api_key)
+
+
+def langsmith_project_name() -> str | None:
+    configure_langsmith_environment()
+    return _first_env("LANGSMITH_PROJECT", "LANGCHAIN_PROJECT")
+
+
+configure_langsmith_environment()
+
 # ── LLM 설정 ──────────────────────────────────────────────
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 LLM_MODEL = "gemini-2.5-flash"

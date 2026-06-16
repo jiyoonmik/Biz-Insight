@@ -9,4 +9,3 @@ langgraph==1.1.10
 google-genai==1.74.0
 fastapi==0.124.4
 requests==2.33.1
-rdflib==7.5.0

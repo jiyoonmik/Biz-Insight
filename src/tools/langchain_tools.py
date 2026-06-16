@@ -8,7 +8,7 @@ from src.tools.csv_tools import (
 )
 from src.tools.ml_tools import predict_credit_rating_from_data, get_feature_importance
 from src.tools.dynamic_tools import DYNAMIC_TOOLS
-from src.tools.kg_tools import KG_TOOLS
+from src.tools.context_tools import CONTEXT_TOOLS
 
 
 @tool
@@ -72,10 +72,10 @@ def tool_get_feature_importance(top_n: int = 10) -> Optional[list]:
     """신용등급 예측 ML 모델에서 가장 중요하게 작용한 피쳐(변수) Top-N을 반환합니다."""
     return get_feature_importance(top_n)
 
-# 에이전트별 제공 도구 목록. KG/API 계층 기반 도구를 우선 사용하고,
+# 에이전트별 제공 도구 목록. canonical context/API 계층 기반 도구를 우선 사용하고,
 # 기존 CSV 조회 도구는 legacy fallback으로 남긴다.
 RESEARCHER_TOOLS = [
-    *KG_TOOLS,
+    *CONTEXT_TOOLS,
     *DYNAMIC_TOOLS,
     tool_get_company_info,
     tool_get_financial_data,
@@ -88,8 +88,8 @@ RESEARCHER_TOOLS = [
 ]
 
 ANALYST_TOOLS = [
-    KG_TOOLS[2],
-    KG_TOOLS[3],
+    CONTEXT_TOOLS[2],
+    CONTEXT_TOOLS[3],
     tool_predict_credit_rating,
     tool_get_feature_importance
 ]

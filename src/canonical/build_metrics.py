@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from collections import OrderedDict
 from typing import Any
 
@@ -10,7 +9,6 @@ from src.canonical.schema import (
     ALLOWED_METRIC_CATEGORIES,
     DATA_DIR,
     IDENTIFIER_COLUMNS,
-    PROJECT_ROOT,
     normalize_text,
     report,
     sanitize_code,
@@ -79,6 +77,113 @@ CREDIT_MARKERS = (
     "working_capital",
 )
 
+SEED_METRICS: list[dict[str, Any]] = [
+    {
+        "metric_code": "total_assets",
+        "metric_name_ko": "자산총계",
+        "metric_name_en": "Total assets",
+        "metric_category": "financial",
+        "criteria": [],
+        "evidence_direction": "context_dependent",
+    },
+    {
+        "metric_code": "revenue",
+        "metric_name_ko": "매출액",
+        "metric_name_en": "Revenue",
+        "metric_category": "financial",
+        "criteria": ["growth", "market_position"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "operating_income",
+        "metric_name_ko": "영업이익",
+        "metric_name_en": "Operating income",
+        "metric_category": "financial",
+        "criteria": ["profitability", "going_concern"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "ebitda_margin",
+        "metric_name_ko": "EBITDA 마진",
+        "metric_name_en": "EBITDA margin",
+        "metric_category": "financial",
+        "criteria": ["profitability", "cash_generation"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "debt_ratio",
+        "metric_name_ko": "부채비율",
+        "metric_name_en": "Debt ratio",
+        "metric_category": "credit",
+        "criteria": ["leverage", "going_concern"],
+        "evidence_direction": "lower_is_better",
+    },
+    {
+        "metric_code": "current_ratio",
+        "metric_name_ko": "유동비율",
+        "metric_name_en": "Current ratio",
+        "metric_category": "credit",
+        "criteria": ["liquidity", "going_concern"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "quick_ratio",
+        "metric_name_ko": "당좌비율",
+        "metric_name_en": "Quick ratio",
+        "metric_category": "credit",
+        "criteria": ["liquidity"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "operating_cash_flow",
+        "metric_name_ko": "영업활동현금흐름",
+        "metric_name_en": "Operating cash flow",
+        "metric_category": "credit",
+        "criteria": ["cash_generation", "going_concern"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "interest_coverage_ratio",
+        "metric_name_ko": "이자보상배율",
+        "metric_name_en": "Interest coverage ratio",
+        "metric_category": "credit",
+        "criteria": ["leverage", "cash_generation"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "return_on_assets",
+        "metric_name_ko": "총자산순이익률",
+        "metric_name_en": "Return on assets",
+        "metric_category": "investment",
+        "criteria": ["profitability"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "price_to_book_ratio",
+        "metric_name_ko": "PBR",
+        "metric_name_en": "Price to book ratio",
+        "metric_category": "investment",
+        "criteria": ["profitability", "market_position"],
+        "evidence_direction": "context_dependent",
+    },
+    {
+        "metric_code": "rating_worklifebal",
+        "metric_name_ko": "워라밸 평점",
+        "metric_name_en": "Work-life balance rating",
+        "metric_category": "employee",
+        "criteria": ["internal_control"],
+        "evidence_direction": "higher_is_better",
+    },
+    {
+        "metric_code": "us_kor_exchange_avg",
+        "metric_name_ko": "원달러 평균환율",
+        "metric_name_en": "Average USD/KRW exchange rate",
+        "metric_category": "macro",
+        "criteria": ["macro_sensitivity"],
+        "evidence_direction": "context_dependent",
+    },
+]
+
 
 def classify_metric(metric_code: str) -> str:
     if metric_code in EMPLOYEE_METRICS:
@@ -104,53 +209,29 @@ def infer_unit(metric_code: str) -> str | None:
     return None
 
 
-def _parse_ontology_metrics() -> tuple[dict[str, dict[str, Any]], list[dict[str, str]]]:
-    path = PROJECT_ROOT / "ontology" / "bizinsight-core.ttl"
-    if not path.exists():
-        return {}, []
-    text = path.read_text(encoding="utf-8")
-    blocks = re.findall(r"(bi:metric_[\w_]+\s+.*?)(?=\n\nbi:|\n#################################################################|\Z)", text, re.S)
+def _seed_metrics() -> tuple[dict[str, dict[str, Any]], list[dict[str, str]]]:
     metrics: dict[str, dict[str, Any]] = {}
     criteria: list[dict[str, str]] = []
-    for block in blocks:
-        code_match = re.search(r'bi:metricCode\s+"([^"]+)"', block)
-        if not code_match:
-            continue
-        code = code_match.group(1)
-        ko_match = re.search(r'bi:metricNameKo\s+"([^"]+)"', block)
-        en_match = re.search(r'bi:metricNameEn\s+"([^"]+)"', block)
-        direction_match = re.search(r'bi:evidenceDirection\s+"([^"]+)"', block)
-        class_part = block.split(";", 1)[0]
-        category = classify_metric(code)
-        if "InvestmentMetric" in class_part:
-            category = "investment"
-        elif "CreditMetric" in class_part:
-            category = "credit"
-        elif "EmployeeMetric" in class_part:
-            category = "employee"
-        elif "StockMetric" in class_part:
-            category = "stock"
-        elif "MacroMetric" in class_part:
-            category = "macro"
+    for seed in SEED_METRICS:
+        code = str(seed["metric_code"])
+        direction = str(seed.get("evidence_direction") or "context_dependent")
         metrics[code] = {
             "metric_code": code,
-            "metric_name_ko": ko_match.group(1) if ko_match else None,
-            "metric_name_en": en_match.group(1) if en_match else None,
-            "metric_category": category,
+            "metric_name_ko": seed.get("metric_name_ko"),
+            "metric_name_en": seed.get("metric_name_en"),
+            "metric_category": seed.get("metric_category") or classify_metric(code),
             "unit": infer_unit(code),
-            "source_file": "ontology/bizinsight-core.ttl",
+            "source_file": "canonical_seed",
         }
-        supports_match = re.search(r"bi:supportsCriterion\s+([^;]+)", block)
-        if supports_match:
-            for criterion in re.findall(r"bi:criterion_([\w_]+)", supports_match.group(1)):
-                criteria.append(
-                    {
-                        "metric_code": code,
-                        "criterion_code": criterion,
-                        "evidence_direction": direction_match.group(1) if direction_match else "context_dependent",
-                        "rationale": "Defined in ontology/bizinsight-core.ttl",
-                    }
-                )
+        for criterion in seed.get("criteria", []):
+            criteria.append(
+                {
+                    "metric_code": code,
+                    "criterion_code": criterion,
+                    "evidence_direction": direction,
+                    "rationale": "Defined in canonical metric seed",
+                }
+            )
     return metrics, criteria
 
 
@@ -175,8 +256,8 @@ def _add_metric(metrics: OrderedDict[str, dict[str, Any]], code: str, source_fil
 
 
 def build_metrics() -> dict[str, Any]:
-    ontology_metrics, ontology_criteria = _parse_ontology_metrics()
-    metrics: OrderedDict[str, dict[str, Any]] = OrderedDict((code, row) for code, row in ontology_metrics.items())
+    seed_metrics, seed_criteria = _seed_metrics()
+    metrics: OrderedDict[str, dict[str, Any]] = OrderedDict((code, row) for code, row in seed_metrics.items())
 
     for source in METRIC_SOURCES:
         path = DATA_DIR / source
@@ -203,7 +284,7 @@ def build_metrics() -> dict[str, Any]:
     metrics_df = metrics_df[metrics_df["metric_category"].isin(ALLOWED_METRIC_CATEGORIES)]
     metrics_df = metrics_df.drop_duplicates("metric_code").sort_values("metric_code")
 
-    criteria_df = pd.DataFrame(ontology_criteria)
+    criteria_df = pd.DataFrame(seed_criteria)
     if criteria_df.empty:
         criteria_df = pd.DataFrame(columns=["metric_code", "criterion_code", "evidence_direction", "rationale"])
     else:

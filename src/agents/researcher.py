@@ -49,8 +49,8 @@ def researcher_node(state: dict) -> dict:
                     f"추론된 분석 도메인은 {requested_domains}입니다. "
                     f"반드시 허용된 도구({allowed_tool_names}) 안에서만 필요한 데이터를 수집하세요. "
                     "기업명만으로 분석하지 말고 먼저 alias 검색 도구로 stock_code를 확정한 뒤, "
-                    "KG knowledge context와 dynamic signal 도구를 우선 사용하세요. "
-                    "CSV 조회 도구는 KG/API 계층에서 찾지 못한 경우의 fallback으로만 사용하세요. "
+                    "canonical context와 dynamic signal 도구를 우선 사용하세요. "
+                    "CSV 조회 도구는 context/API 계층에서 찾지 못한 경우의 fallback으로만 사용하세요. "
                     "요청과 관련 없는 도구는 호출하지 마세요. "
                     "모든 필요한 데이터를 충분히 수집했다고 판단되면, 최종 수집 결과를 요약해서 답변하세요."
         )

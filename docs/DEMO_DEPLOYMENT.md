@@ -24,7 +24,7 @@ UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync streamlit run app.py
 The app will read:
 
 - `data/demo/company_info.csv` for the sidebar search
-- `data/demo/canonical/*.csv` for KG context tools
+- `data/demo/canonical/*.csv` for canonical context tools
 - `data/demo/dynamic/*.csv` for stock, review, and macro tools
 
 ## Report Trace
@@ -82,7 +82,7 @@ The root `requirements.txt` is intentionally smaller than `pyproject.toml` so th
 The demo dataset is a curated snapshot as of 2026-06-13 KST. It is designed to demonstrate:
 
 - canonical data modeling
-- KG-style query tools
+- canonical context query tools
 - dynamic signal tools
 - LangGraph supervisor/researcher/analyst/reviewer/synthesis flow
 - KOSPI benchmark comparison and KOSDAQ growth-company interpretation

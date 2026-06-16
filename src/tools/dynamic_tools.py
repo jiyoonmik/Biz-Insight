@@ -21,7 +21,7 @@ def tool_get_review_summary(stock_code: str, period: str | None = None) -> dict:
 
 @tool
 def tool_search_review_evidence(stock_code: str, query: str, top_k: int = 5) -> dict:
-    """stock_code 기준 직원 리뷰 원문 evidence를 검색합니다. 원문은 KG가 아니라 dynamic store에서 조회합니다."""
+    """stock_code 기준 직원 리뷰 원문 evidence를 검색합니다. 원문은 canonical context가 아니라 dynamic store에서 조회합니다."""
     return {"stock_code": stock_code, "query": query, "evidence": search_review_evidence(stock_code, query=query, top_k=top_k)}
 
 
@@ -37,4 +37,3 @@ DYNAMIC_TOOLS = [
     tool_search_review_evidence,
     tool_get_macro_context,
 ]
-
