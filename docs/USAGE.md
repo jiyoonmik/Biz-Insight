@@ -73,42 +73,58 @@ canonical 테이블 생성:
 UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m src.canonical.build_all
 ```
 
-로컬 RAG 벡터스토어 생성:
+dynamic 스토어(주가·거시·직원 후기) 생성. **후기 스토어는 세 소스(employee/b_/j_)를 리치 스키마로 통합**하므로, 후기 검색을 쓰려면 먼저 빌드해야 합니다:
 
 ```bash
-UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m src.rag.build_vectorstore build \
-  --data-dir data \
-  --out-dir data/vectorstore \
-  --max-rows-per-doc 80 \
-  --max-features 100000
+UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m src.dynamic.refresh_dynamic_data
+# 후기 스토어만: python -m src.dynamic.review_store
 ```
 
-RAG 검색 예시:
-
-```bash
-UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m src.rag.build_vectorstore query \
-  "신용등급 재무 안정성 부채 상환능력" \
-  --entity 삼성전자 \
-  --top-k 3
-```
+후기 semantic 검색은 `search_review_evidence(stock_code, query)`로 노출되며, 부분문자열이 아니라 문자 n-gram TF-IDF 유사도로 회사 후기를 정렬합니다(§2.12). scikit-learn이 없으면 부분문자열로 자동 폴백합니다.
 
 ## Development
 
 Install dependencies with `uv` using the project environment used by this repository.
 
 ```bash
-UV_PROJECT_ENVIRONMENT=bizinsight uv sync
+UV_PROJECT_ENVIRONMENT=bizinsight uv sync --extra dev
 ```
 
-Run tests:
+`data/canonical`은 파생 데이터라 저장소에 없습니다. 처음 클론했다면 테스트 전에 빌드하세요 (약 8초).
 
 ```bash
-UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m unittest discover -s tests
+UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m src.canonical.build_all
 ```
+
+Run tests (LLM 호출 없음, 약 20초):
+
+```bash
+UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m pytest tests -q
+```
+
+Run evals — 자세한 설계 배경은 `evals/README.md` 참고:
+
+```bash
+# Tier 1: 라우팅 평가 (LLM 불필요, CI 게이트와 동일)
+UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m evals.run_routing_eval --verbose
+
+# Tier 2: 리포트 평가 (GOOGLE_API_KEY 필요)
+UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m evals.run_report_eval --dry-run
+UV_PROJECT_ENVIRONMENT=bizinsight uv run --no-sync python -m evals.run_report_eval --limit 2
+```
+
+Rate limit 지연은 **LLM 호출 직후에만** 발생하며 환경변수로 조절합니다. 유료 쿼터나 로컬 반복 실행에서는 0으로 낮출 수 있습니다.
+
+```text
+BIZINSIGHT_POST_LLM_DELAY_SEC=1.5      # LLM 호출 후 대기 (기본 1.5, 0이면 비활성)
+```
+
+실행 비용(LLM 호출 수, 토큰, 모델 대기, rate limit 대기)은 Streamlit의 `실행 로그 및 데이터 출처 보기`와 Tier 2 평가 결과에 함께 기록됩니다.
 
 When changing the data model, update the flow in this order:
 
 1. canonical builder
 2. context query function
 3. LangChain tool or API endpoint
-4. Streamlit or agent prompt surface
+4. 근거 원장 추출기 (`src/agents/evidence.py`) — 새 도구가 새로운 행 모양을 반환하면 추가
+5. Streamlit or agent prompt surface
