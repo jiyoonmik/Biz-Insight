@@ -1,46 +1,38 @@
 [project]
 name = "biz-insight"
-version = "0.1.0"
-description = "Streamlit and LangGraph based corporate analysis service for Korean company data."
+version = "0.2.0"
+description = "LangGraph multi-agent pipeline that turns scattered Korean company data into evidence-backed analyst reports."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
+
+# 런타임 코어. 멀티에이전트 파이프라인, canonical/dynamic 데이터 계층,
+# 두 개의 표면(Streamlit / FastAPI)을 돌리는 데 실제로 import되는 것만 남긴다.
+#
+# scikit-learn은 직원 후기 semantic 검색(TF-IDF)의 엔진이다. 후기를 자연어로
+# 검색하는 것이 이 프로젝트의 원래 정체성이므로 코어에 둔다. 없으면 부분문자열로
+# graceful degradation 하지만, 그 경우 프로젝트의 핵심 가치가 빠진 상태다.
 dependencies = [
-    "django==6.0.4",
-    "focal-loss==0.0.7",
     "fastapi==0.124.4",
-    "google-genai==1.74.0",
-    "groq==0.37.1",
-    "joblib==1.5.3",
-    "keras==3.14.0",
     "langchain==1.2.17",
-    "langchain-community==0.4.1",
-    "langchain-experimental==0.4.1",
     "langchain-google-genai==4.2.2",
-    "langchain-groq==1.1.2",
-    "langchain-openai==1.2.1",
     "langgraph==1.1.10",
-    "matplotlib==3.10.9",
     "numpy==2.4.4",
-    "openai==2.33.0",
-    "openpyxl==3.1.5",
     "pandas==3.0.2",
-    "pymysql==1.1.3",
     "pyarrow==22.0.0",
     "python-dotenv==1.2.2",
     "requests==2.33.1",
     "scikit-learn==1.8.0",
-    "scipy==1.17.1",
-    "seaborn==0.13.2",
-    "sentencepiece==0.2.1",
-    "sqlalchemy==2.0.49",
     "streamlit==1.57.0",
-    "tensorflow==2.21.0",
-    "tokenizers==0.23.1",
-    "tqdm==4.67.3",
-    "wordcloud==1.9.6",
+    "uvicorn==0.41.0",
 ]
 
 [project.optional-dependencies]
+# 테스트와 평가 하네스. eval 러너 자체는 코어 외 의존성이 없다.
+dev = [
+    "pytest==9.0.2",
+]
+
+# 원본 데이터 수집 스크립트 전용. 리포트 생성 경로에서는 쓰이지 않는다.
 data-api = [
     "beautifulsoup4",
     "dart-fss",
@@ -51,13 +43,9 @@ data-api = [
     "selenium",
     "webdriver-manager",
 ]
-rag = [
-    "chromadb",
-    "langchain-chroma",
-    "sentence-transformers",
-]
 
 [tool.uv]
 package = false
 
-[tool.uv.sources]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
