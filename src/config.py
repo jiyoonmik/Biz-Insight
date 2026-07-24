@@ -97,10 +97,12 @@ LLM_MODEL = "gemini-2.5-flash"
 LLM_TEMPERATURE = 0.2
 
 # ── Rate Limit 설정 ───────────────────────────────────────
-# 에이전트 노드 실행 사이 대기 시간 (초)
-INTER_AGENT_DELAY_SEC = 2.0
-# 단일 LLM 호출 후 대기 시간 (초)
-POST_LLM_CALL_DELAY_SEC = 1.5
+# 무료 티어 quota 대응. 지연을 비용으로 지불해 안정성을 사는 구조라
+# 유료 쿼터나 테스트에서는 0으로 낮출 수 있도록 환경변수로 뺐다.
+#
+# 간격은 LLM 호출 직후에만 둔다. 예전에는 노드 경계에 걸어 두어서 LLM을 부르지
+# 않는 노드도 대기했고, 호출하는 노드는 노드 지연과 handoff 지연을 이중으로 물었다.
+POST_LLM_CALL_DELAY_SEC = float(os.getenv("BIZINSIGHT_POST_LLM_DELAY_SEC", "1.5"))
 
 # ── 데이터 경로 ───────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -130,24 +132,19 @@ CSV_FILES = {
 }
 
 
-def get_llm():
-    """Gemini 2.5 Flash LLM 인스턴스를 반환합니다."""
+def get_llm(agent: str | None = None):
+    """Gemini LLM 인스턴스를 반환합니다.
+
+    계측과 rate limit 간격을 붙인 래퍼로 감싸서 돌려줍니다. 지연을 노드가 아니라
+    호출 지점에 두는 이유는 `src/agents/telemetry.py` 참고.
+    """
     from langchain_google_genai import ChatGoogleGenerativeAI
 
-    return ChatGoogleGenerativeAI(
+    from src.agents.telemetry import TrackedLLM
+
+    llm = ChatGoogleGenerativeAI(
         model=LLM_MODEL,
         temperature=LLM_TEMPERATURE,
         google_api_key=GOOGLE_API_KEY,
     )
-
-
-def rate_limited(func):
-    """LLM 호출 함수에 자동으로 지연을 추가하는 데코레이터."""
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        time.sleep(POST_LLM_CALL_DELAY_SEC)
-        return result
-
-    return wrapper
+    return TrackedLLM(llm, delay_sec=POST_LLM_CALL_DELAY_SEC, agent=agent)

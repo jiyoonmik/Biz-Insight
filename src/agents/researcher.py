@@ -1,7 +1,11 @@
-import time
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
-from src.config import get_llm, rate_limited, INTER_AGENT_DELAY_SEC
-from src.agents.tool_result_compactor import compact_tool_result, summarize_tool_messages
+from src.config import get_llm
+from src.agents.evidence import extract_facts
+from src.agents.tool_result_compactor import (
+    compact_message_history,
+    compact_tool_result,
+    summarize_tool_messages,
+)
 from src.tools.langchain_tools import RESEARCHER_TOOLS
 
 
@@ -19,12 +23,11 @@ def _message_content_to_text(content) -> str:
     return str(content)
 
 
-@rate_limited
 def researcher_node(state: dict) -> dict:
     """
     Researcher 에이전트: 도구를 사용해 기업 데이터를 수집합니다.
     """
-    llm = get_llm()
+    llm = get_llm(agent="researcher")
     
     company = state["company"]
     query_type = state["query_type"]
@@ -73,12 +76,15 @@ def researcher_node(state: dict) -> dict:
             "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",
         }
         
-    # 모델 호출
-    response = llm_with_tools.invoke(messages)
+    # 모델 호출. 히스토리는 원장 참조로 압축한 사본을 보낸다(§2.5).
+    response = llm_with_tools.invoke(
+        compact_message_history(messages, ledger=state.get("evidence", []))
+    )
     
     # 도구 호출이 있는 경우
     if response.tool_calls:
         new_messages = messages + [response]
+        collected_facts = []
         for tool_call in response.tool_calls:
             # 도구 이름에 맞는 함수 찾기
             tool_func = next((t for t in available_tools if t.name == tool_call["name"]), None)
@@ -88,7 +94,9 @@ def researcher_node(state: dict) -> dict:
                 except Exception as e:
                     tool_result = f"Error: {str(e)}"
                 compact_result = compact_tool_result(tool_call["name"], tool_result)
-                
+                # 요약 문장이 되기 전에 구조화된 사실을 원장으로 빼돌린다.
+                collected_facts.extend(extract_facts(tool_call["name"], compact_result))
+
                 tool_msg = ToolMessage(
                     content=str(compact_result),
                     tool_call_id=tool_call["id"],
@@ -105,6 +113,7 @@ def researcher_node(state: dict) -> dict:
         # 도구 실행 후 다시 모델을 호출하기 위해 recursion 증가 후 현재 노드 반환
         return {
             "researcher_messages": new_messages[len(messages):],
+            "evidence": collected_facts,
             "recursion_count": recursion_count + 1,
             "next_agent": "researcher" # 스스로를 다시 호출 (ReAct Loop)
         }
@@ -117,7 +126,6 @@ def researcher_node(state: dict) -> dict:
             errors = [f"researcher_empty_response: finish_reason={finish_reason}"]
         else:
             errors = []
-        time.sleep(INTER_AGENT_DELAY_SEC)
         return {
             "researcher_messages": [response],
             "analyses": [{"agent": "researcher", "content": content}],

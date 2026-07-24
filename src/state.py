@@ -35,8 +35,15 @@ class BizInsightState(TypedDict):
     analyses: Annotated[List[dict], operator.add]
     # 각 dict: {"agent": str, "content": str}
 
+    # ── 근거 원장 (도구 결과에서 뽑은 구조화된 사실) ──
+    # 도구 호출 시점에 누적한다. 요약 문장이 아니라 값 자체를 상태로 흘려야
+    # Synthesis가 인용할 근거를 갖고 Verifier가 대조할 대상을 갖는다.
+    evidence: Annotated[List[dict], operator.add]
+    # 각 dict: {"metric", "label", "period", "value", "numeric", "kind", "source", "tool"}
+
     # ── 최종 출력 ──
     final_report: str
+    grounding: dict  # Verifier의 근거 대조 결과
 
     # ── 에러 추적 ──
     errors: Annotated[List[str], operator.add]

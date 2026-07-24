@@ -123,10 +123,33 @@ def render_execution_trace(trace: dict) -> None:
     graph_lines.append("}")
     st.graphviz_chart("\n".join(graph_lines), width="stretch")
 
-    col_a, col_b, col_c = st.columns(3)
+    grounding = trace.get("grounding") or {}
+    col_a, col_b, col_c, col_d = st.columns(4)
     col_a.metric("에이전트", len(agents))
     col_b.metric("도구 호출", len(tool_calls))
-    col_c.metric("데이터 출처", len(sources))
+    col_c.metric("근거 원장", trace.get("evidence_count", 0))
+    coverage = grounding.get("coverage")
+    col_d.metric(
+        "수치 대조율",
+        "n/a" if coverage is None else f"{coverage:.0%}",
+        help="리포트 본문 수치 중 도구가 실제로 반환한 값과 일치한 비율입니다. "
+             "원장 값에서 계산된 파생 수치는 미확인으로 잡힐 수 있습니다.",
+    )
+
+    usage = trace.get("usage") or {}
+    if usage.get("llm_calls"):
+        st.markdown("**실행 비용**")
+        cost_a, cost_b, cost_c = st.columns(3)
+        cost_a.metric("LLM 호출", usage.get("llm_calls", 0))
+        cost_c.metric("토큰", f"{usage.get('total_tokens', 0):,}")
+        cost_b.metric(
+            "모델 대기",
+            f"{usage.get('llm_seconds', 0):.1f}s",
+            help=f"rate limit 대기 {usage.get('throttle_seconds', 0):.1f}s 별도",
+        )
+        by_agent = usage.get("calls_by_agent") or {}
+        if by_agent:
+            st.caption("에이전트별 호출: " + ", ".join(f"{k} {v}회" for k, v in by_agent.items()))
 
     if trace.get("requested_domains"):
         st.markdown("**분석 범위**")
@@ -142,6 +165,26 @@ def render_execution_trace(trace: dict) -> None:
                         "sources": ", ".join(call.get("sources") or []),
                     }
                     for call in tool_calls
+                ]
+            ),
+            width="stretch",
+            hide_index=True,
+        )
+
+    evidence = trace.get("evidence") or []
+    if evidence:
+        st.markdown("**근거 원장** (도구가 반환한 값 그대로)")
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "기준": "회계연도" if fact.get("kind") == "canonical" else "스냅샷",
+                        "지표": fact.get("label") or fact.get("metric"),
+                        "기간": fact.get("period"),
+                        "값": fact.get("value"),
+                        "출처": fact.get("source") or fact.get("tool"),
+                    }
+                    for fact in evidence[:80]
                 ]
             ),
             width="stretch",

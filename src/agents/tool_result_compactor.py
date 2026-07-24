@@ -208,6 +208,34 @@ def _compact_series(result: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _scrub(value: Any) -> Any:
+    """repr이 다시 파싱 가능하도록 값을 정리한다.
+
+    도구 결과는 `str(dict)`로 ToolMessage에 실리고, 나중에 `ast.literal_eval`로
+    되읽어 출처 추적·히스토리 요약·근거 추출에 쓰인다. 그런데 pandas가 돌려주는
+    `nan`이나 numpy 스칼라(`np.float64(3.0)`)가 섞이면 그 repr은 literal_eval로
+    파싱되지 않는다. 파싱이 실패해도 예외는 삼켜지므로 **출처가 조용히 사라지고**
+    히스토리 요약이 "사실 없음"으로 잘못 표시된다.
+
+    실제로 이 버그는 히스토리 압축 효과를 측정하다가 드러났다. 계측을 붙이지
+    않았다면 트레이스의 출처 목록이 왜 비는지 알아내기 어려웠을 것이다.
+    """
+    if isinstance(value, dict):
+        return {key: _scrub(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_scrub(item) for item in value]
+    if hasattr(value, "item") and not isinstance(value, (str, bytes)):
+        try:
+            value = value.item()  # numpy 스칼라 → 파이썬 기본형
+        except Exception:
+            return str(value)
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
 def compact_tool_result(tool_name: str, result: Any, max_chars: int = 12_000) -> Any:
     if not isinstance(result, dict):
         text = str(result)
@@ -231,10 +259,95 @@ def compact_tool_result(tool_name: str, result: Any, max_chars: int = 12_000) ->
     else:
         compacted = result
 
+    compacted = _scrub(compacted)
     text = str(compacted)
     if len(text) <= max_chars:
         return compacted
     return text[:max_chars] + "...[truncated]"
+
+
+# ReAct 루프에서 원문 그대로 재전송할 최근 도구 결과 개수.
+HISTORY_KEEP_FULL = 1
+
+
+def _history_digest(message: Any, ledger: list[dict[str, Any]] | None = None) -> str:
+    """오래된 도구 결과를 원장 참조 한 줄로 바꾼다.
+
+    요약은 원장에서 직접 만든다. 도구 결과 문자열을 다시 파싱해 재추출하면 같은
+    일을 두 번 하는 데다, 파싱이 실패하는 순간 "사실 없음"이라는 틀린 요약을
+    LLM에게 보내게 된다. 이미 수집 시점에 뽑아 둔 것을 쓰는 편이 정확하고 싸다.
+    """
+    from src.agents.evidence import extract_facts
+
+    name = getattr(message, "name", "tool") or "tool"
+
+    if ledger:
+        facts = [fact for fact in ledger if isinstance(fact, dict) and fact.get("tool") == name]
+    else:
+        content = getattr(message, "content", "")
+        try:
+            parsed = ast.literal_eval(content) if isinstance(content, str) else content
+        except Exception:
+            parsed = content
+        facts = extract_facts(name, parsed)
+
+    if not facts:
+        return f"[히스토리 압축] {name} 호출 완료 — 구조화된 사실 없음. 원문 생략."
+
+    metrics = sorted({str(fact["metric"]) for fact in facts})
+    shown = ", ".join(metrics[:8])
+    more = f" 외 {len(metrics) - 8}종" if len(metrics) > 8 else ""
+    return (
+        f"[히스토리 압축] {name} 호출 완료 — 사실 {len(facts)}건이 근거 원장에 적재됨. "
+        f"수집 지표: {shown}{more}. "
+        "원문은 생략했으며 최종 리포트는 원장에서 인용한다. 같은 도구를 다시 부를 필요 없음."
+    )
+
+
+def compact_message_history(
+    messages: list[Any],
+    keep_full: int | None = None,
+    ledger: list[dict[str, Any]] | None = None,
+) -> list[Any]:
+    """ReAct 루프가 LLM에 재전송하는 히스토리를 줄인다.
+
+    ReAct는 매 턴 전체 히스토리를 다시 보낸다. 도구 결과 하나가 최대 12,000자이므로
+    4턴이면 같은 원문을 네 번 지불하게 된다. 그런데 이 프로젝트는 도구 결과를 이미
+    **근거 원장**으로 구조화해 상태에 들고 있다(README §2.5). 원문이 사라져도 근거는
+    남아 있고, Synthesis와 Verifier는 원장에서 인용하고 대조한다.
+
+    ReAct 루프에서 오래된 원문이 필요한 경우는 "다음에 무엇을 더 모을까"를 정할 때
+    거의 없으므로, 최근 `keep_full`건만 원문으로 두고 나머지는 '무엇을 모았는지'를
+    알려주는 참조 한 줄로 바꾼다.
+
+    상태(`researcher_messages`)는 건드리지 않는다. 여기서 만드는 것은 LLM에 보낼
+    사본이며, 트레이스와 폴백 요약은 계속 전체 히스토리를 본다.
+    """
+    # 모듈 상수를 호출 시점에 읽는다. 기본 인자에 바인딩하면 설정을 바꿔도
+    # 반영되지 않아 측정과 실제 동작이 어긋난다.
+    keep_full = HISTORY_KEEP_FULL if keep_full is None else keep_full
+
+    tool_positions = [
+        index for index, message in enumerate(messages)
+        if getattr(message, "type", None) == "tool" or isinstance(message, ToolMessage)
+    ]
+    if len(tool_positions) <= keep_full:
+        return messages
+
+    to_compact = set(tool_positions[:-keep_full] if keep_full else tool_positions)
+    compacted = []
+    for index, message in enumerate(messages):
+        if index not in to_compact:
+            compacted.append(message)
+            continue
+        compacted.append(
+            ToolMessage(
+                content=_history_digest(message, ledger=ledger),
+                tool_call_id=getattr(message, "tool_call_id", str(index)),
+                name=getattr(message, "name", None),
+            )
+        )
+    return compacted
 
 
 def summarize_tool_messages(messages: list[Any], max_chars: int = 16_000) -> str:

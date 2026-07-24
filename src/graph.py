@@ -16,6 +16,8 @@ from src.agents.researcher import researcher_node
 from src.agents.analyst import analyst_node
 from src.agents.reviewer import reviewer_node
 from src.agents.synthesis import synthesis_node
+from src.agents.verifier import verifier_node
+from src.agents import telemetry
 from src.config import langsmith_project_name, langsmith_tracing_enabled
 
 def dynamic_router(state: dict) -> str:
@@ -41,6 +43,8 @@ def build_graph():
     workflow.add_node("analyst", analyst_node)
     workflow.add_node("reviewer", reviewer_node)
     workflow.add_node("synthesis", synthesis_node)
+    # 품질 게이트는 둘이다. Reviewer는 LLM 판단, Verifier는 결정론적 근거 대조.
+    workflow.add_node("verifier", verifier_node)
 
     # 2. 엣지 정의
     # 무조건 supervisor부터 시작
@@ -59,8 +63,9 @@ def build_graph():
     # Reviewer는 품질 평가 후 통과면 Synthesis로, 반려면 다시 Analyst로
     workflow.add_conditional_edges("reviewer", dynamic_router)
     
-    # Synthesis는 최종 결과물 작성 후 종료
+    # Synthesis는 리포트 작성 후 Verifier로, Verifier는 근거 대조 후 종료
     workflow.add_conditional_edges("synthesis", dynamic_router)
+    workflow.add_conditional_edges("verifier", dynamic_router)
 
     return workflow.compile()
 
@@ -154,12 +159,17 @@ def build_execution_trace(result: dict[str, Any]) -> dict[str, Any]:
     for call in tool_calls:
         sources.update(call.get("sources", []))
 
+    evidence = result.get("evidence", []) or []
     return {
+        "usage": telemetry.snapshot(),
         "agents": agents,
         "requested_domains": result.get("requested_domains", []),
         "allowed_research_tools": result.get("allowed_research_tools", []),
         "tool_calls": tool_calls,
         "data_sources": sorted(sources),
+        "evidence": evidence,
+        "evidence_count": len(evidence),
+        "grounding": result.get("grounding", {}) or {},
         "errors": result.get("errors", []),
     }
 
@@ -185,8 +195,13 @@ def generate_ai_report_result(
         "revision_count": 0,
         "max_revisions": 1,
         "feedback": None,
+        "evidence": [],
         "final_report": "",
+        "grounding": {},
     }
+
+    # 계측은 리포트 1건 단위로 누적한다.
+    telemetry.reset()
 
     try:
         config = _build_invoke_config(company_name, query_type, request_text)
@@ -202,11 +217,15 @@ def generate_ai_report_result(
         return {
             "report": error_report,
             "trace": {
+                "usage": telemetry.snapshot(),
                 "agents": [],
                 "requested_domains": [],
                 "allowed_research_tools": [],
                 "tool_calls": [],
                 "data_sources": [],
+                "evidence": [],
+                "evidence_count": 0,
+                "grounding": {},
                 "errors": [str(e)],
             },
             "state": {},

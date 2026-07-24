@@ -1,7 +1,11 @@
-import time
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
-from src.config import get_llm, rate_limited, INTER_AGENT_DELAY_SEC
-from src.agents.tool_result_compactor import compact_tool_result, summarize_tool_messages
+from src.config import get_llm
+from src.agents.evidence import extract_facts
+from src.agents.tool_result_compactor import (
+    compact_message_history,
+    compact_tool_result,
+    summarize_tool_messages,
+)
 from src.tools.langchain_tools import ANALYST_TOOLS
 
 
@@ -19,12 +23,11 @@ def _content_to_text(content) -> str:
     return str(content)
 
 
-@rate_limited
 def analyst_node(state: dict) -> dict:
     """
     Analyst 에이전트: 수집된 데이터를 바탕으로 분석을 수행하고 예측 모델을 활용합니다.
     """
-    llm = get_llm()
+    llm = get_llm(agent="analyst")
     llm_with_tools = llm.bind_tools(ANALYST_TOOLS)
     
     company = state["company"]
@@ -77,12 +80,15 @@ def analyst_node(state: dict) -> dict:
             **feedback_update
         }
         
-    # 모델 호출
-    response = llm_with_tools.invoke(messages)
+    # 모델 호출. 히스토리는 원장 참조로 압축한 사본을 보낸다(§2.5).
+    response = llm_with_tools.invoke(
+        compact_message_history(messages, ledger=state.get("evidence", []))
+    )
     
     # 도구 호출 확인
     if response.tool_calls:
         new_messages = messages + [response]
+        collected_facts = []
         for tool_call in response.tool_calls:
             tool_func = next((t for t in ANALYST_TOOLS if t.name == tool_call["name"]), None)
             if tool_func:
@@ -91,7 +97,8 @@ def analyst_node(state: dict) -> dict:
                 except Exception as e:
                     tool_result = f"Error: {str(e)}"
                 compact_result = compact_tool_result(tool_call["name"], tool_result)
-                
+                collected_facts.extend(extract_facts(tool_call["name"], compact_result))
+
                 tool_msg = ToolMessage(
                     content=str(compact_result),
                     tool_call_id=tool_call["id"],
@@ -107,6 +114,7 @@ def analyst_node(state: dict) -> dict:
         
         return {
             "analyst_messages": new_messages[len(messages):],
+            "evidence": collected_facts,
             "recursion_count": recursion_count + 1,
             "next_agent": "analyst",
             **feedback_update
@@ -127,7 +135,6 @@ def analyst_node(state: dict) -> dict:
             errors = [f"analyst_invalid_response: finish_reason={finish_reason}"]
         else:
             errors = []
-        time.sleep(INTER_AGENT_DELAY_SEC)
         return {
             "analyst_messages": [response],
             "analyses": [{"agent": "analyst", "content": content}],

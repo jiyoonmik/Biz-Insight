@@ -6,7 +6,7 @@ from src.tools.csv_tools import (
     get_credit_data, get_credit_rank, get_investment_data,
     get_stock_data, get_employee_reviews
 )
-from src.tools.ml_tools import predict_credit_rating_from_data, get_feature_importance
+from src.tools.ml_tools import predict_credit_rating, get_feature_importance
 from src.tools.dynamic_tools import DYNAMIC_TOOLS
 from src.tools.context_tools import CONTEXT_TOOLS
 
@@ -61,10 +61,11 @@ def tool_get_employee_reviews(corp_name: str) -> dict:
 
 
 @tool
-def tool_predict_credit_rating(financial_features: dict) -> dict:
-    """재무 피쳐 딕셔너리를 입력받아 ML 모델 기반으로 신용등급을 예측합니다. 
-    재무 데이터를 먼저 수집한 후 그 값을 바탕으로 호출해야 합니다."""
-    return predict_credit_rating_from_data(financial_features)
+def tool_predict_credit_rating(stock_code: str, year: Optional[int] = None) -> dict:
+    """stock_code로 ML 모델 기반 신용등급 예측값을 조회합니다.
+    피처는 도구가 학습 테이블에서 직접 조립하므로 재무 수치를 직접 넘길 필요가 없습니다.
+    실제 평가기관 등급이 아니라 모델 예측값이며, 실제 등급은 신용등급 이력 도구를 쓰세요."""
+    return predict_credit_rating(stock_code, year=year)
 
 
 @tool

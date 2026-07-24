@@ -5,6 +5,7 @@ from src.agents.researcher import researcher_node
 from src.agents.reviewer import reviewer_node
 from src.agents.supervisor import supervisor_node
 from src.agents.synthesis import synthesis_node
+from src.agents.verifier import verifier_node
 
 __all__ = [
     "analyst_node",
@@ -12,4 +13,5 @@ __all__ = [
     "reviewer_node",
     "supervisor_node",
     "synthesis_node",
+    "verifier_node",
 ]

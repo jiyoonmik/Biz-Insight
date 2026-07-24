@@ -21,7 +21,11 @@ def tool_get_review_summary(stock_code: str, period: str | None = None) -> dict:
 
 @tool
 def tool_search_review_evidence(stock_code: str, query: str, top_k: int = 5) -> dict:
-    """stock_code 기준 직원 리뷰 원문 evidence를 검색합니다. 원문은 canonical context가 아니라 dynamic store에서 조회합니다."""
+    """stock_code 기준으로 질의와 유사한 직원 리뷰 원문을 TF-IDF로 검색합니다.
+    정확 부분문자열이 아니라 문자 n-gram 유사도라, 띄어쓰기·조사가 달라도
+    '커리어 향상 부족'으로 '커리어 향상이 안 된다' 후기를 찾습니다. 각 결과는
+    직무·재직상태·평점·장점·단점을 포함합니다. 조직문화, 이탈 신호, 내부 리스크
+    근거에 사용하세요."""
     return {"stock_code": stock_code, "query": query, "evidence": search_review_evidence(stock_code, query=query, top_k=top_k)}
 
 
