@@ -1,0 +1,36 @@
+name: CI
+
+# 이 파이프라인은 LLM을 호출하지 않는다. API 키 없이, 몇 분 안에, 결정론적으로
+# 끝나야 매 커밋 돌릴 수 있기 때문이다. 라우팅 정확도와 그래프 제어 흐름은
+# 모델 없이 검증 가능하도록 설계했고(README §2.1, §6), CI가 그 설계의 수령자다.
+on:
+  push:
+    branches: [main, v0.1]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      # canonical 테이블은 파생 데이터라 저장소에 커밋하지 않는다.
+      # 원본 CSV에서 매번 재생성해 빌더 자체도 함께 검증한다.
+      - name: Build canonical tables
+        run: uv run python -m src.canonical.build_all
+
+      - name: Run tests
+        run: uv run python -m pytest tests -q
+
+      - name: Routing eval gate
+        run: uv run python -m evals.run_routing_eval --min-exact-match 0.9

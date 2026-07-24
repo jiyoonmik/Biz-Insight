@@ -1,0 +1,7 @@
+{"id": "kosdaq-full-01", "company": "케이아이엔엑스", "query_type": "full_report", "request": "공시, 실적, 산업 맥락, 주가 흐름, 직원 리뷰를 연결해 투자 가설과 핵심 리스크를 분석해줘."}
+{"id": "kosdaq-financial-01", "company": "덕산네오룩스", "query_type": "financial", "request": "매출 성장성, 수익성, 현금흐름, 재무 안정성을 산업 맥락과 비교해 분석해줘."}
+{"id": "kosdaq-credit-01", "company": "씨앤씨인터내셔널", "query_type": "credit", "request": "신용등급, 부채 상환능력, 유동성 관점의 위험 요인을 분석해줘."}
+{"id": "kosdaq-risk-01", "company": "인텔리안테크", "query_type": "risk", "request": "재무, 신용, 시장 가격, 조직 신호를 종합해 주요 리스크와 모니터링 포인트를 정리해줘."}
+{"id": "kosdaq-review-01", "company": "제이브이엠", "query_type": "review", "request": "직원 리뷰를 바탕으로 조직문화와 근무환경 관련 리스크를 분석해줘."}
+{"id": "kospi-overview-01", "company": "카카오", "query_type": "overview", "request": "사업 구조, 주요 제품, 시장 포지션을 요약해줘."}
+{"id": "kospi-ambiguous-01", "company": "삼성전자", "query_type": "full_report", "request": "이 회사 어때?"}

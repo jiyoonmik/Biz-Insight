@@ -1,0 +1,32 @@
+{"id": "single-overview-01", "query_type": "overview", "request": "이 기업의 사업 구조와 주요 제품을 알려줘", "expected_domains": ["overview"]}
+{"id": "single-financial-01", "query_type": "financial", "request": "매출 성장성과 수익성을 분석해줘", "expected_domains": ["financial"]}
+{"id": "single-credit-01", "query_type": "credit", "request": "신용등급과 상환능력을 봐줘", "expected_domains": ["credit"]}
+{"id": "single-investment-01", "query_type": "investment", "request": "PER과 PBR 기준으로 밸류에이션을 평가해줘", "expected_domains": ["investment"]}
+{"id": "single-review-01", "query_type": "review", "request": "직원 리뷰를 바탕으로 조직문화를 알려줘", "expected_domains": ["review"]}
+{"id": "single-risk-01", "query_type": "risk", "request": "주요 리스크를 정리해줘", "expected_domains": ["risk"]}
+{"id": "narrow-financial-01", "query_type": "full_report", "request": "재무만 간단히 보고 싶어", "expected_domains": ["financial"]}
+{"id": "narrow-credit-01", "query_type": "full_report", "request": "신용등급 이력만 확인하고 싶어", "expected_domains": ["credit"]}
+{"id": "narrow-review-01", "query_type": "full_report", "request": "직원 평판만 궁금해", "expected_domains": ["review"]}
+{"id": "narrow-risk-01", "query_type": "full_report", "request": "리스크 위주로 봐줘", "expected_domains": ["risk"]}
+{"id": "narrow-investment-01", "query_type": "full_report", "request": "주가 모멘텀만 확인하고 싶어", "expected_domains": ["investment"]}
+{"id": "narrow-financial-02", "query_type": "full_report", "request": "영업이익과 현금흐름 추세를 보고 싶어", "expected_domains": ["financial"]}
+{"id": "narrow-review-02", "query_type": "full_report", "request": "워라밸과 복지 수준은 어때?", "expected_domains": ["review"]}
+{"id": "narrow-risk-02", "query_type": "full_report", "request": "거시경제 변동성이 이 기업에 주는 위험을 알려줘", "expected_domains": ["risk"]}
+{"id": "narrow-overview-01", "query_type": "full_report", "request": "핵심만 요약해줘", "expected_domains": ["overview"]}
+{"id": "multi-fin-risk-01", "query_type": "financial", "request": "재무와 함께 리스크도 봐줘", "expected_domains": ["financial", "risk"]}
+{"id": "multi-credit-inv-01", "query_type": "credit", "request": "신용등급과 주가 흐름을 같이 봐줘", "expected_domains": ["credit", "investment"]}
+{"id": "multi-risk-review-01", "query_type": "risk", "request": "리스크와 직원 이탈 신호를 함께 정리해줘", "expected_domains": ["risk", "review"]}
+{"id": "multi-fin-credit-01", "query_type": "full_report", "request": "부채비율 중심으로 신용 위험을 판단해줘", "expected_domains": ["financial", "credit", "risk"]}
+{"id": "multi-fin-credit-02", "query_type": "full_report", "request": "실적이랑 재무 상태, 그리고 신용도까지 확인해줘", "expected_domains": ["financial", "credit"]}
+{"id": "multi-fin-inv-01", "query_type": "full_report", "request": "매출은 늘었는데 왜 주가는 빠지는지 보고 싶어", "expected_domains": ["financial", "investment"]}
+{"id": "ambiguous-01", "query_type": "full_report", "request": "전반적으로 다 분석해줘", "expected_domains": ["overview", "financial", "credit", "investment", "review", "risk"]}
+{"id": "ambiguous-02", "query_type": "full_report", "request": "여기 들어가도 괜찮을지 판단할 근거를 만들어줘", "expected_domains": ["overview", "financial", "credit", "investment", "review", "risk"]}
+{"id": "ambiguous-03", "query_type": "full_report", "request": "이 회사 어때?", "expected_domains": ["overview", "financial", "credit", "investment", "review", "risk"]}
+{"id": "ambiguous-04", "query_type": "full_report", "request": "투자해도 될까?", "expected_domains": ["overview", "financial", "credit", "investment", "review", "risk"]}
+{"id": "trap-common-word-01", "query_type": "risk", "request": "이 회사가 무너질 가능성이 있는지 알려줘", "expected_domains": ["risk"]}
+{"id": "trap-common-word-02", "query_type": "credit", "request": "기업 정보와 함께 신용도를 알려줘", "expected_domains": ["overview", "credit"]}
+{"id": "en-financial-01", "query_type": "full_report", "request": "analyze financial performance and profitability", "expected_domains": ["financial"]}
+{"id": "en-credit-risk-01", "query_type": "full_report", "request": "credit rating and default risk assessment", "expected_domains": ["credit", "risk"]}
+{"id": "en-review-01", "query_type": "full_report", "request": "employee culture and review signals", "expected_domains": ["review"]}
+{"id": "en-investment-01", "query_type": "full_report", "request": "valuation and stock momentum check", "expected_domains": ["investment"]}
+{"id": "en-overview-01", "query_type": "full_report", "request": "company profile summary", "expected_domains": ["overview"]}
