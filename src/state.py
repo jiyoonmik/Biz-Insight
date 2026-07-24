@@ -17,16 +17,32 @@ class BizInsightState(TypedDict):
     analyst_messages: Annotated[List[BaseMessage], operator.add]
 
     # ── 라우팅 및 제어 상태 ──
+    # 워커는 자기 단계가 끝나면 supervisor로 돌아오고, 다음 행선지와 예산은
+    # supervisor가 정한다. 아래 플래그가 그 판단의 입력이다.
     active_agents: List[str]  # Supervisor가 계획한 에이전트 실행 목록
     current_agent: Optional[str]  # 현재 실행 중인 에이전트
     next_agent: Optional[str]  # 다음에 실행할 노드/에이전트 이름
+    planned: bool  # 초기 계획 수립 완료 여부 (supervisor 재진입 판별)
     recursion_count: int  # 재귀(반복) 횟수 제어용 카운터
-    max_recursions: int  # 현재 에이전트의 최대 tool-calling 반복 횟수
+    max_recursions: int  # 현재 에이전트의 최대 tool-calling 반복 횟수 (supervisor가 지정)
     requested_domains: List[str]  # Supervisor가 자연어 요청에서 추론한 분석 도메인
     allowed_research_tools: List[str]  # Researcher가 사용할 수 있는 도구명
     needs_analysis: bool  # Analyst/Reviewer 단계를 수행할지 여부
     revision_count: int  # Reviewer 피드백으로 재분석한 횟수
     max_revisions: int  # Reviewer 피드백 루프 최대 횟수
+
+    # ── 단계 완료 플래그 (워커가 세우고 supervisor가 읽는다) ──
+    research_done: bool
+    analysis_done: bool
+    review_verdict: Optional[str]  # "PASS" | "REVISE" | None(미검토)
+    synthesis_done: bool
+    verification_done: bool
+
+    # ── 재계획 상태 ──
+    recollect_count: int  # 근거 공백으로 재수집한 횟수
+    gap_handled: bool  # 근거 공백 판정을 마쳤는지 (매 홉 재판정 방지)
+    research_directive: Optional[str]  # 재수집 시 Researcher에게 주는 목표
+    dropped_domains: Annotated[List[dict], operator.add]  # 근거 부족으로 접은 도메인과 사유
     
     # ── 중간 데이터 및 피드백 (Self-Correction 용도) ──
     feedback: Optional[str]  # Reviewer가 남긴 피드백 메시지

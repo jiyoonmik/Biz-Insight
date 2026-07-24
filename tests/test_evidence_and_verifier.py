@@ -97,12 +97,14 @@ class VerifierTests(unittest.TestCase):
         self.assertEqual(result["evidence_count"], 0)
         self.assertIn("대조되지 않은", render_verification_section(result))
 
-    def test_node_appends_section_and_terminates(self) -> None:
+    def test_node_appends_section_and_reports_back_to_supervisor(self) -> None:
         state = verifier_node({
             "final_report": "매출액은 1조 2,345억원입니다.",
             "evidence": self.facts,
         })
-        self.assertEqual(state["next_agent"], "END")
+        # 허브 구조: 종료 판단도 Supervisor가 내린다.
+        self.assertEqual(state["next_agent"], "supervisor")
+        self.assertTrue(state["verification_done"])
         self.assertIn("근거 대조", state["final_report"])
         self.assertEqual(state["grounding"]["matched"], 1)
         self.assertEqual(state["analyses"][0]["agent"], "verifier")
@@ -112,7 +114,7 @@ class VerifierTests(unittest.TestCase):
             "final_report": "목표주가 99,999원, 예상 매출 88,888원",
             "evidence": self.facts,
         })
-        self.assertEqual(state["next_agent"], "END")
+        self.assertEqual(state["next_agent"], "supervisor")
         self.assertTrue(any("low_grounding_coverage" in err for err in state["errors"]))
 
 

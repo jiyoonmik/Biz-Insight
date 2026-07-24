@@ -59,6 +59,13 @@ def researcher_node(state: dict) -> dict:
         )
         request_msg = HumanMessage(content=f"분석 대상 기업: {company}\n분석 요청: {user_request}")
         messages = [sys_msg, request_msg] + messages
+
+    # Supervisor가 근거 공백을 보고 재수집을 지시했다면 목표를 좁혀 이어간다.
+    directive = state.get("research_directive")
+    directive_update: dict = {}
+    if directive:
+        messages = messages + [HumanMessage(content=directive)]
+        directive_update = {"research_directive": None}
     
     # ── 호출 횟수(Recursion) 제어 ──
     if recursion_count >= max_recursions:
@@ -71,9 +78,9 @@ def researcher_node(state: dict) -> dict:
                            f"{summary}",
             }],
             "errors": [f"researcher_react_limit_reached: {recursion_count}/{max_recursions}"],
-            "recursion_count": 0,
-            "max_recursions": 3,
-            "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",
+            "research_done": True,
+            "next_agent": "supervisor",
+            **directive_update,
         }
         
     # 모델 호출. 히스토리는 원장 참조로 압축한 사본을 보낸다(§2.5).
@@ -115,7 +122,10 @@ def researcher_node(state: dict) -> dict:
             "researcher_messages": new_messages[len(messages):],
             "evidence": collected_facts,
             "recursion_count": recursion_count + 1,
-            "next_agent": "researcher" # 스스로를 다시 호출 (ReAct Loop)
+            # 도구 루프는 supervisor를 거치지 않는다. 허브는 단계 사이를 조율하지
+            # 도구 턴 하나하나를 중개하지 않는다.
+            "next_agent": "researcher",
+            **directive_update,
         }
     else:
         # 도구 호출이 끝나고 최종 요약을 내놓은 경우
@@ -130,7 +140,7 @@ def researcher_node(state: dict) -> dict:
             "researcher_messages": [response],
             "analyses": [{"agent": "researcher", "content": content}],
             "errors": errors,
-            "recursion_count": 0, # 다음 에이전트를 위해 초기화
-            "max_recursions": 3,
-            "next_agent": "analyst" if state.get("needs_analysis", True) else "synthesis",
+            "research_done": True,
+            "next_agent": "supervisor",
+            **directive_update,
         }

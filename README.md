@@ -85,28 +85,36 @@
 
 ## 3. 구성과 동작 — 어떻게 만들었나
 
-```
-Supervisor(규칙) → Researcher(ReAct) → Analyst(ReAct) → Reviewer(LLM 게이트) → Synthesis → Verifier(결정론 게이트)
-```
+모든 워커가 Supervisor로 복귀하는 허브 구조입니다. Supervisor는 **규칙으로 판단**하므로 홉이 늘어도 LLM 호출은 늘지 않습니다.
 
 ```mermaid
 flowchart TD
-    User["User request<br/>company + analysis intent"] --> Supervisor["Supervisor<br/>rule-based routing<br/>+ tool allow-list"]
-    Supervisor --> Researcher["Researcher<br/>stock_code resolution<br/>+ evidence ledger"]
-    Researcher -->|needs more data| Researcher
-    Researcher --> Analyst["Analyst<br/>domain analysis"]
-    Analyst -->|needs tool evidence| Analyst
-    Analyst --> Reviewer["Reviewer<br/>deterministic pre-check<br/>+ LLM judgement"]
-    Reviewer -->|REVISE, max 1| Analyst
-    Reviewer -->|PASS or budget exhausted| Synthesis["Synthesis<br/>report from ledger"]
-    Supervisor -.->|overview only| Synthesis
-    Synthesis --> Verifier["Verifier<br/>deterministic grounding check"]
-    Verifier --> Report["Streamlit report<br/>trace + ledger + coverage"]
+    User["User request<br/>company + analysis intent"] --> Supervisor
+    Supervisor{"Supervisor (rules, no LLM)<br/>plan · dispatch · budget · replan"}
+
+    Supervisor -->|dispatch| Researcher["Researcher<br/>stock_code + evidence ledger"]
+    Researcher -->|more tools| Researcher
+    Researcher -->|done| Supervisor
+
+    Supervisor -->|dispatch| Analyst["Analyst<br/>domain analysis"]
+    Analyst -->|more tools| Analyst
+    Analyst -->|done| Supervisor
+
+    Supervisor -->|dispatch| Reviewer["Reviewer<br/>rule pre-check + LLM judgement"]
+    Reviewer -->|verdict| Supervisor
+
+    Supervisor -->|dispatch| Synthesis["Synthesis<br/>report from ledger"]
+    Synthesis --> Supervisor
+    Supervisor -->|dispatch| Verifier["Verifier<br/>deterministic grounding check"]
+    Verifier --> Supervisor
+    Supervisor -->|END| Report["Streamlit report<br/>trace + ledger + coverage"]
 ```
+
+재계획 경로: 근거 0건이면 Supervisor가 Researcher를 좁힌 범위로 다시 파견하고, 그래도 없으면 해당 도메인을 계획에서 접습니다(§3.1).
 
 | Agent | Role | Key Behavior |
 |---|---|---|
-| Supervisor | 요청 해석과 실행 계획 수립 | **LLM 없이** 도메인 분류 + 도구 allow-list 생성, 선택 근거 기록 |
+| Supervisor | 계획·파견·예산·재계획 (허브) | **LLM 없이** 도메인 분류, 도구 allow-list 생성, 단계별 예산 지정, 근거 공백 시 재수집/도메인 축소 |
 | Researcher | 데이터 수집 | alias로 `stock_code` 확정 후 canonical → dynamic → legacy 순 ReAct 호출, 근거 원장 적재 |
 | Analyst | 분석 초안 작성 | 도메인별 해석, 필요 시 ML 신용등급 예측 |
 | Reviewer | 품질 게이트 | 기계적 요건은 코드로 판정, 판단이 필요한 것만 LLM |
@@ -115,9 +123,11 @@ flowchart TD
 
 `overview` 요청만 Analyst/Reviewer를 건너뜁니다(2.1-2).
 
-### 3.1 Supervisor를 LLM이 아니라 규칙으로 둔 이유
+### 3.1 Supervisor — 규칙으로 판단하는 재진입 허브
 
-라우터에는 **LLM 호출이 없습니다.** 의도적입니다.
+모든 워커는 자기 단계를 마치면 supervisor로 돌아오고, 다음 행선지와 예산은 supervisor가 정합니다(hub and spoke). 예외는 ReAct 도구 루프로, Researcher/Analyst가 도구를 더 부르는 동안에는 자기 자신으로 돌아갑니다 — 허브는 **단계 사이를 조율하지 도구 턴 하나하나를 중개하지 않습니다.**
+
+그리고 **판단에 LLM 호출이 없습니다.** 의도적입니다.
 
 - **라우팅은 열린 추론이 아니라 닫힌 분류 문제였습니다.** 도메인은 6개로 고정돼 있고 도구 번들도 사전에 결정됩니다. 열린 생성이 필요 없는 곳에 LLM을 넣으면 비용·지연만 늘고 재현성을 잃습니다.
 - **라우팅 실패는 관측이 어렵습니다.** LLM 라우터가 잘못 분기하면 하류 결과만 이상해지고 원인은 트레이스를 파야 나옵니다.
@@ -126,6 +136,20 @@ flowchart TD
 **모호하면 좁히지 않고 넓힙니다.** 도메인 신호를 못 찾으면 전체로 확장합니다. 잘못 좁혀 근거를 빠뜨리는 쪽이 조금 더 수집하는 쪽보다 훨씬 치명적이기 때문입니다. 반대로 명시적 신호가 있으면 좁힙니다.
 
 **약한 신호와 확정 신호를 나눕니다.** "이 회사 어때?"의 '회사', "투자해도 될까?"의 '투자'는 도메인 지정이 아니라 거의 조사처럼 쓰이는 일반 명사입니다. 확정 신호로 두면 종합 판단을 원한 요청이 단일 도메인으로 좁혀집니다. `WEAK_DOMAIN_KEYWORDS`로 분리하되 **목록을 지우지 않고 남겨** 왜 이 단어로 라우팅하지 않는지가 코드에 남게 했습니다. 이 구분은 평가가 결함을 잡은 뒤 도입했습니다(§5.1).
+
+**허브가 하는 일은 라우팅만이 아닙니다 — 관측된 결과로 계획을 고칩니다.**
+
+| 관측 | 재계획 |
+|---|---|
+| 요청 도메인에 근거가 0건 | 그 도메인 도구로 allow-list를 좁혀 **1회 재수집** 지시 |
+| 재수집 후에도 0건 | 계획에서 **접고 사유를 기록** — Analyst가 데이터 없는 도메인을 상상해 쓰지 않게 |
+| Reviewer가 REVISE | 예산이 남으면 Analyst로 되돌리고, 소진되면 경고를 남기고 진행 |
+
+근거 공백을 보는 근거는 §3.6의 원장입니다. 각 사실이 자기를 만든 도구 이름을 갖고 있으므로, 도메인의 도구 번들과 교집합이 비면 그 도메인은 수집 실패입니다. **검증용으로 만든 원장이 재계획의 입력으로도 쓰이는** 구조입니다.
+
+**예산은 supervisor 단독 소유입니다.** 예전에는 각 워커가 다음 워커의 예산을 덮어썼습니다(researcher가 3, reviewer가 1이나 2). 소유자가 없으니 값이 어디서 정해지는지 추적이 안 됐습니다. 이제 파견하는 쪽이 예산을 줍니다.
+
+> **허브 비용은 왜 0에 가까운가.** 재진입은 홉을 늘립니다. 실측하면 `financial` 요청 1건에 supervisor 홉이 8회 추가됩니다. 그런데 **LLM 호출은 6회로 그대로**입니다 — supervisor 판단이 규칙이기 때문입니다. 여기에 §5.4에서 rate limit 간격을 노드 경계에서 LLM 호출 경계로 옮겨 둔 것이 결정적이었습니다. 옛 구조였다면 홉 8회 × 1.5초 = 12초가 그냥 얹혔을 겁니다. **최적화가 구조 변경의 전제조건이었던 셈**이고, 순서가 반대였다면 "supervisor 패턴은 느리다"는 잘못된 결론을 냈을 것입니다.
 
 ### 3.2 도구를 전부 열지 않고 allow-list로 자르기
 
@@ -390,7 +414,8 @@ ReAct는 매 턴 전체 대화를 재전송하므로 도구 결과 하나(최대
 - **`j_company_review`는 회수하지 못했습니다.** CSV 인용이 깨져(자유텍스트에 escape 안 된 콤마·개행) 유효 행이 컬럼 정렬 어긋난 소수뿐입니다. 원본 재수집이나 전용 파서가 필요합니다.
 - **ML 예측 도구는 데모에서 비활성입니다.** 피처 계약은 복원했지만(§3.11) 데모 데이터셋에 학습 피처 테이블이 없습니다.
 - **Researcher가 순차 실행입니다.** `full_report`는 6개 도메인을 한 루프에서 순차로 돕니다. 도메인별 병렬화로 지연을 크게 줄일 수 있으나 rate limit 압력이 올라가 유료 쿼터 전환이 선행되어야 합니다.
-- **Supervisor는 진입 시 1회 실행되는 정적 플래너입니다.** 통상의 supervisor 패턴(매 홉 재진입)이 아니며, 수집 실패를 계획에 반영하거나 Verifier 결과로 재계획하지 못합니다. 재진입 구조로 바꾸는 것이 다음 단계입니다.
+- **Verifier 결과는 아직 재계획으로 이어지지 않습니다.** 근거 대조율이 낮아도 리포트에 표면화할 뿐, Supervisor가 재수집을 지시하지는 않습니다. 허브 구조는 갖춰졌으므로 규칙 한 줄로 열 수 있지만, 재수집 → 재분석 → 재종합이 거의 두 번째 실행이라 비용 대비 효과를 먼저 재야 합니다.
+- **Supervisor 판단은 규칙이라 사전에 없는 상황은 다루지 못합니다.** 재계획 규칙은 근거 공백과 재검토 예산 두 가지뿐입니다. 상황이 늘면 규칙이 분기 지옥이 되므로, 그 시점이 LLM 판단을 부분 도입할 지점입니다(모호한 상태만 에스컬레이션).
 
 ---
 

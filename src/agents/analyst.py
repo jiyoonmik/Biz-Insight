@@ -76,7 +76,8 @@ def analyst_node(state: dict) -> dict:
                            f"{summary}",
             }],
             "errors": [f"analyst_react_limit_reached: {recursion_count}/{max_recursions}"],
-            "next_agent": "reviewer",
+            "analysis_done": True,
+            "next_agent": "supervisor",
             **feedback_update
         }
         
@@ -116,6 +117,7 @@ def analyst_node(state: dict) -> dict:
             "analyst_messages": new_messages[len(messages):],
             "evidence": collected_facts,
             "recursion_count": recursion_count + 1,
+            # 도구 루프는 내부에서 돈다.
             "next_agent": "analyst",
             **feedback_update
         }
@@ -139,7 +141,7 @@ def analyst_node(state: dict) -> dict:
             "analyst_messages": [response],
             "analyses": [{"agent": "analyst", "content": content}],
             "errors": errors,
-            "recursion_count": 0, # 다음 에이전트를 위해 초기화
-            "next_agent": "reviewer", # 다음 단계는 품질 검토 (Reviewer)
+            "analysis_done": True,
+            "next_agent": "supervisor",
             **feedback_update
         }

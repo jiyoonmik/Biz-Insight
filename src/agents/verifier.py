@@ -246,5 +246,6 @@ def verifier_node(state: dict) -> dict:
                 f"본문 수치 {result['matched']}/{result['checked']}건 일치 (대조율 {coverage_text})"
             ),
         }],
-        "next_agent": "END",
+        "verification_done": True,
+        "next_agent": "supervisor",
     }

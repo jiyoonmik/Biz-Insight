@@ -46,26 +46,19 @@ def build_graph():
     # 품질 게이트는 둘이다. Reviewer는 LLM 판단, Verifier는 결정론적 근거 대조.
     workflow.add_node("verifier", verifier_node)
 
-    # 2. 엣지 정의
-    # 무조건 supervisor부터 시작
+    # 2. 엣지 정의 — hub and spoke
+    #
+    # 모든 워커는 자기 단계를 마치면 supervisor로 돌아오고, 다음 행선지는
+    # supervisor가 상태를 보고 정한다. 워커가 다음 워커를 직접 지목하던 예전
+    # 구조에서는 수집이 실패해도 계획에 반영할 주체가 없었다.
+    #
+    # 예외는 ReAct 도구 루프다. Researcher/Analyst가 도구를 더 부르는 동안에는
+    # 자기 자신으로 돌아간다. 허브는 단계 사이를 조율하지 도구 턴 하나하나를
+    # 중개하지 않는다 — 그러면 홉만 늘고 얻는 것이 없다.
     workflow.add_edge(START, "supervisor")
 
-    # Supervisor 이후 라우팅
-    workflow.add_conditional_edges("supervisor", dynamic_router)
-    
-    # 각 에이전트 실행 후 라우팅 (next_agent 값에 따라 분기)
-    # Researcher는 도구 사용 중이면 자신을 반복 호출, 끝나면 Analyst로
-    workflow.add_conditional_edges("researcher", dynamic_router)
-    
-    # Analyst는 도구 사용 중이면 자신을 반복 호출, 끝나면 Reviewer로
-    workflow.add_conditional_edges("analyst", dynamic_router)
-    
-    # Reviewer는 품질 평가 후 통과면 Synthesis로, 반려면 다시 Analyst로
-    workflow.add_conditional_edges("reviewer", dynamic_router)
-    
-    # Synthesis는 리포트 작성 후 Verifier로, Verifier는 근거 대조 후 종료
-    workflow.add_conditional_edges("synthesis", dynamic_router)
-    workflow.add_conditional_edges("verifier", dynamic_router)
+    for node in ("supervisor", "researcher", "analyst", "reviewer", "synthesis", "verifier"):
+        workflow.add_conditional_edges(node, dynamic_router)
 
     return workflow.compile()
 
@@ -77,7 +70,7 @@ biz_insight_graph = build_graph()
 def _build_invoke_config(company_name: str, query_type: str, user_request: str) -> dict:
     """Build LangGraph runtime config, including LangSmith trace metadata."""
     return {
-        "recursion_limit": 30,
+        "recursion_limit": 60,
         "run_name": "biz-insight-report",
         "tags": [
             "biz-insight",
@@ -170,6 +163,8 @@ def build_execution_trace(result: dict[str, Any]) -> dict[str, Any]:
         "evidence": evidence,
         "evidence_count": len(evidence),
         "grounding": result.get("grounding", {}) or {},
+        "dropped_domains": result.get("dropped_domains", []) or [],
+        "recollect_count": result.get("recollect_count", 0),
         "errors": result.get("errors", []),
     }
 
@@ -198,6 +193,17 @@ def generate_ai_report_result(
         "evidence": [],
         "final_report": "",
         "grounding": {},
+        # 계획 수립 여부와 단계 완료 플래그. Supervisor가 재진입할 때 판단 입력이 된다.
+        "planned": False,
+        "research_done": False,
+        "analysis_done": False,
+        "review_verdict": None,
+        "synthesis_done": False,
+        "verification_done": False,
+        "recollect_count": 0,
+        "gap_handled": False,
+        "research_directive": None,
+        "dropped_domains": [],
     }
 
     # 계측은 리포트 1건 단위로 누적한다.
@@ -226,6 +232,8 @@ def generate_ai_report_result(
                 "evidence": [],
                 "evidence_count": 0,
                 "grounding": {},
+                "dropped_domains": [],
+                "recollect_count": 0,
                 "errors": [str(e)],
             },
             "state": {},

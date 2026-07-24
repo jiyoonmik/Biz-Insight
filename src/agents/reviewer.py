@@ -17,8 +17,6 @@ def reviewer_node(state: dict) -> dict:
     company = state["company"]
     user_request = state.get("user_request") or state.get("query_type", "full_report")
     requested_domains = state.get("requested_domains", [])
-    revision_count = state.get("revision_count", 0)
-    max_revisions = state.get("max_revisions", 1)
     analyses = state.get("analyses", [])
     
     # 마지막으로 Analyst가 작성한 내용을 찾음
@@ -30,20 +28,12 @@ def reviewer_node(state: dict) -> dict:
             
     if not analyst_content:
         feedback = "Analyst 산출물이 비어 있어 최종 리포트 품질 검증을 수행할 수 없습니다."
-        if revision_count < max_revisions:
-            return {
-                "feedback": feedback,
-                "revision_count": revision_count + 1,
-                "recursion_count": 0,
-                "max_recursions": 1,
-                "next_agent": "analyst",
-                "errors": ["reviewer_empty_analyst_output"],
-                "analyses": [{"agent": "reviewer", "content": f"🔄 검토 피드백: {feedback}"}],
-            }
         return {
-            "next_agent": "synthesis",
+            "review_verdict": "REVISE",
+            "feedback": feedback,
+            "next_agent": "supervisor",
             "errors": ["reviewer_empty_analyst_output"],
-            "analyses": [{"agent": "reviewer", "content": f"⚠️ 추가 보완 필요: {feedback}"}],
+            "analyses": [{"agent": "reviewer", "content": f"🔄 검토 피드백: {feedback}"}],
         }
         
     # ── 1단계: 기계적 요건 점검 (LLM 호출 없음) ──
@@ -51,24 +41,14 @@ def reviewer_node(state: dict) -> dict:
     if not checks["passed"]:
         feedback = checks["feedback"]
         detail = "\n".join(f"- {item}" for item in checks["failures"])
-        if revision_count < max_revisions:
-            return {
-                "feedback": feedback,
-                "revision_count": revision_count + 1,
-                "recursion_count": 0,
-                "max_recursions": 2,
-                "next_agent": "analyst",
-                "analyses": [{
-                    "agent": "reviewer",
-                    "content": f"🔄 기계적 요건 미충족으로 반려 (LLM 검토 생략)\n{detail}",
-                }],
-            }
         return {
-            "next_agent": "synthesis",
+            "review_verdict": "REVISE",
+            "feedback": feedback,
+            "next_agent": "supervisor",
             "errors": [f"reviewer_deterministic_checks_failed: {len(checks['failures'])}건"],
             "analyses": [{
                 "agent": "reviewer",
-                "content": f"⚠️ 추가 보완 필요 (재검토 한도 도달)\n{detail}",
+                "content": f"🔄 기계적 요건 미충족으로 반려 (LLM 검토 생략)\n{detail}",
             }],
         }
 
@@ -117,22 +97,16 @@ def reviewer_node(state: dict) -> dict:
         status = "REVISE"
         feedback = "Reviewer 응답 JSON 파싱에 실패했습니다. 분석 본문과 근거를 더 명확히 구조화해야 합니다."
         
-    if status == "REVISE" and feedback and revision_count < max_revisions:
+    if status == "REVISE" and feedback:
         return {
+            "review_verdict": "REVISE",
             "feedback": feedback,
-            "revision_count": revision_count + 1,
-            "recursion_count": 0,
-            "max_recursions": 2,
-            "next_agent": "analyst", # 다시 Analyst로 돌아감
+            "next_agent": "supervisor",
             "analyses": [{"agent": "reviewer", "content": f"🔄 검토 피드백: {feedback}"}]
-        }
-    elif status == "REVISE" and feedback:
-        return {
-            "next_agent": "synthesis",
-            "analyses": [{"agent": "reviewer", "content": f"⚠️ 추가 보완 필요: {feedback}\n\n최대 재검토 횟수에 도달하여 현재 분석으로 최종 리포트를 생성합니다."}]
         }
     else:
         return {
-            "next_agent": "synthesis", # 문제 없으면 최종 작성으로 넘어감
+            "review_verdict": "PASS",
+            "next_agent": "supervisor",
             "analyses": [{"agent": "reviewer", "content": "✅ 검토 완료: 분석 품질이 양호합니다."}]
         }

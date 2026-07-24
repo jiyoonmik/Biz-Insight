@@ -86,7 +86,8 @@ def synthesis_node(state: dict) -> dict:
     if not analyses:
         return {
             "final_report": f"## ❌ {company} 분석 실패\n\n분석할 데이터가 없습니다.",
-            "next_agent": "END"
+            "synthesis_done": True,
+            "next_agent": "supervisor",
         }
 
     try:
@@ -128,7 +129,8 @@ def synthesis_node(state: dict) -> dict:
                 "agent": "synthesis",
                 "content": f"📝 최종 리포트 작성 완료 (근거 원장 {len(evidence)}건 참조)",
             }],
-            "next_agent": "verifier"
+            "synthesis_done": True,
+            "next_agent": "supervisor",
         }
 
     except Exception as e:
@@ -136,5 +138,6 @@ def synthesis_node(state: dict) -> dict:
         return {
             "final_report": f"## ❌ {company} 종합 리포트 생성 실패\n\n오류: {str(e)}",
             "errors": [f"synthesis_failed: {e}"],
-            "next_agent": "END"
+            "synthesis_done": True,
+            "next_agent": "supervisor",
         }

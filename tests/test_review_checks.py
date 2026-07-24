@@ -87,9 +87,11 @@ class ReviewerGateTests(unittest.TestCase):
         with mock.patch("src.agents.reviewer.get_llm") as get_llm:
             state = reviewer_node(self._state("너무 짧은 초안"))
             get_llm.assert_not_called()
-        self.assertEqual(state["next_agent"], "analyst")
-        self.assertEqual(state["revision_count"], 1)
+        # Reviewer는 판정만 보고한다. 재분석 여부와 예산은 Supervisor가 정한다.
+        self.assertEqual(state["next_agent"], "supervisor")
+        self.assertEqual(state["review_verdict"], "REVISE")
         self.assertIn("LLM 검토 생략", state["analyses"][0]["content"])
+        self.assertTrue(any("deterministic_checks_failed" in e for e in state["errors"]))
 
     def test_passing_draft_reaches_the_llm_stage(self) -> None:
         class Stub:
@@ -100,18 +102,21 @@ class ReviewerGateTests(unittest.TestCase):
         with mock.patch("src.agents.reviewer.get_llm", return_value=Stub()) as get_llm:
             state = reviewer_node(self._state(GOOD_DRAFT))
             get_llm.assert_called_once()
-        self.assertEqual(state["next_agent"], "synthesis")
+        self.assertEqual(state["next_agent"], "supervisor")
+        self.assertEqual(state["review_verdict"], "PASS")
         # LLM 프롬프트는 판단 항목만 남고 형식 요건은 빠져 있어야 한다
         self.assertIn("자동 점검이 판정할 수 없는 것만", Stub.prompt)
 
-    def test_budget_exhausted_draft_proceeds_with_warning(self) -> None:
+    def test_reviewer_does_not_own_the_revision_budget(self) -> None:
+        """예산 소진 판단은 Supervisor 몫이다. Reviewer는 몇 번째든 같은 판정을 낸다."""
         state = self._state("너무 짧은 초안")
-        state["revision_count"] = 1
+        state["revision_count"] = 99
         with mock.patch("src.agents.reviewer.get_llm") as get_llm:
             result = reviewer_node(state)
             get_llm.assert_not_called()
-        self.assertEqual(result["next_agent"], "synthesis")
-        self.assertTrue(any("deterministic_checks_failed" in e for e in result["errors"]))
+        self.assertEqual(result["review_verdict"], "REVISE")
+        self.assertEqual(result["next_agent"], "supervisor")
+        self.assertNotIn("revision_count", result)
 
 
 if __name__ == "__main__":

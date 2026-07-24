@@ -91,7 +91,13 @@ class GraphFlowTests(unittest.TestCase):
         )
         state = result["state"]
         self.assertEqual(state["revision_count"], 1)
-        self.assertTrue(any("추가 보완 필요" in a["content"] for a in state["analyses"]))
+        # 예산 소진 판단과 그 기록은 Reviewer가 아니라 Supervisor가 남긴다.
+        self.assertTrue(
+            any(a["agent"] == "supervisor" and "재검토 예산" in a["content"]
+                for a in state["analyses"]),
+            [a["content"][:40] for a in state["analyses"]],
+        )
+        self.assertEqual(state["review_verdict"], "EXHAUSTED")
         self.assertIn("verifier", result["trace"]["agents"])
 
     def test_react_tool_loop_accumulates_evidence_ledger(self) -> None:
@@ -122,6 +128,36 @@ class GraphFlowTests(unittest.TestCase):
         errors = result["trace"]["errors"]
         self.assertTrue(any("analyst_invalid_response" in err for err in errors))
         # 실패해도 파이프라인은 끝까지 진행되어 리포트를 낸다
+        self.assertIn("verifier", result["trace"]["agents"])
+
+    def test_supervisor_replans_when_research_yields_no_evidence(self) -> None:
+        """그래프 수준에서 재계획이 실제로 도는지 확인한다.
+
+        Researcher가 도구를 한 번도 못 부르면 원장이 비고, 예전 구조에서는 그대로
+        Analyst로 흘러 근거 없는 분석이 나왔다. 이제는 Supervisor가 재수집을
+        지시하고, 그래도 없으면 도메인을 접고 사유를 남긴다.
+        """
+        result = self._run(
+            "AJ네트웍스", "financial", "수익성을 분석해줘",
+            researcher=FakeLLM([
+                FakeResponse(content="수집 실패"),
+                FakeResponse(content="재수집도 실패"),
+            ]),
+            analyst=FakeLLM([FakeResponse(content=ANALYST_DRAFT)]),
+            reviewer=FakeLLM([FakeResponse(content=json.dumps({"status": "PASS", "feedback": ""}))]),
+            synthesis=FakeLLM([FakeResponse(content=REPORT_TEXT)]),
+        )
+        state = result["state"]
+        self.assertEqual(state["recollect_count"], 1, "재수집을 1회 지시해야 한다")
+        self.assertTrue(
+            any("재수집" in a["content"] for a in state["analyses"] if a["agent"] == "supervisor")
+        )
+        self.assertTrue(
+            any("no_evidence" in err or "dropped_domains" in err
+                for err in result["trace"]["errors"]),
+            result["trace"]["errors"],
+        )
+        # 재계획을 해도 파이프라인은 끝까지 진행해 리포트를 낸다
         self.assertIn("verifier", result["trace"]["agents"])
 
     def test_reviewer_unparsable_json_fails_closed(self) -> None:
